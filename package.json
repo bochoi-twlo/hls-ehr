@@ -1,0 +1,22 @@
+{
+  "name": "hls-ehr",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "twilio-run",
+    "deploy": "twilio-run deploy"
+  },
+  "dependencies": {
+    "twilio": "^3.72.0",
+    "@twilio-labs/serverless-api": "^5.4.0",
+    "@twilio/runtime-handler": "^1.2.1",
+    "configure-env": "^2.0.0-1"
+  },
+  "devDependencies": {
+    "twilio-run": "^3.4.0"
+  },
+  "engines": {
+    "node": "14"
+  }
+}
