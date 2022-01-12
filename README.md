@@ -75,7 +75,7 @@ Total reclaimed space: 179.2MB
 
 ### Install HLS-EHR Docker Compose
 
-1. Download `docker-compose.yml` from github here: 
+1. Download `docker-compose.yml` from github [here](https://github.com/bochoi-twlo/hls-ehr/blob/main/assets/hls-ehr/docker-compose.yml)
 
 2. Launch a fresh instance of `hls-ehr` docker compose stack.
 
