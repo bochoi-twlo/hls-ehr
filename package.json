@@ -11,10 +11,12 @@
     "twilio": "^3.72.0",
     "@twilio-labs/serverless-api": "^5.4.0",
     "@twilio/runtime-handler": "1.2.1",
-    "configure-env": "^2.0.0-1"
+    "configure-env": "^2.0.0-1",
+    "follow-redirets": ">=1.14.7"
   },
   "devDependencies": {
-    "twilio-run": "^3.4.0"
+    "twilio-run": "^3.4.0",
+    "follow-redirets": ">=1.14.7"
   },
   "engines": {
     "node": "14"
