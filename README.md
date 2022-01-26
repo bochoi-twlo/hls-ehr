@@ -96,7 +96,7 @@ Examine the docker dashboard and check that all 6 docker containers are running 
 ![Docker Dashboard with HLS-EHR Running](assets/hls-ehr/images/docker-dashboard.png)
 
 
-### Validate Installation
+### Validate & Configure Installation
 
 #### OpenEMR
 
@@ -105,8 +105,45 @@ Examine the docker dashboard and check that all 6 docker containers are running 
 
 - Select 'No Thanks' in registration window ![OpenEMR Registration Window](assets/hls-ehr/images/openemr-registration.png)
 
+- Restore appopriate backup
+```shell
+$ cd assets/hls-ehr/openemr
+$ ./restore-volumes.sh sko
+```
+
+- Launch CLI for `openemr_app` container via Docker desktop, once your CLI terminal opens copy & paste the following:
+```shell
+chmod +w interface/login/login.php
+sed -i -e 's/target="_top"/target="_self"/'  interface/login/login.php
+
+chmod +w src/Common/Session/SessionUtil.php
+sed -i -e 's/use_cookie_samesite = "Strict"/use_cookie_samesite = "None"/' src/Common/Session/SessionUtil.php
+sed -i -e 's/use_cookie_secure = false/use_cookie_secure = true/' src/Common/Session/SessionUtil.php
+
+chmod +w library/js/utility.js
+sed -i -e 's/function xl(string) {/function xl(string) { return string;/' library/js/utility.js
+
+chmod +w interface/main/tabs/js/tabs_view_model.js
+sed -i -e 's/top.restoreSession/restoreSession/g' interface/main/tabs/js/tabs_view_model.js
+
+chmod +w interface/main/finder/dynamic_finder.php
+sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/finder/dynamic_finder.php
+
+chmod +w interface/patient_file/summary/demographics.php
+sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/patient_file/summary/demographics.php
+```
+
+- Restart `openemr_app` container via Docker desktop
+
+- Wait 30 seconds ...
 
 - Login using credentials `admin/pass` ![OpneEMR Login](assets/hls-ehr/images/openemr-login.png)
 
+- For SKO Demo, you can **ONLY** do the following as openEMR is inside an iframe:
 
-- OpenEMR Calender pane will display initially ![OpneEMR Initial](assets/hls-ehr/images/openemr-initial.png)
+  - filter "Patient Finder"
+  - select a patient
+  - open "Calender"
+
+    - changing provider - does NOT YET work
+    - click time to create appointment - does NOT YET work
