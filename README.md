@@ -100,10 +100,10 @@ Examine the docker dashboard and check that all 6 docker containers are running 
 
 #### OpenEMR
 
-- Open http://localhost:80/
-
-
-- Select 'No Thanks' in registration window ![OpenEMR Registration Window](assets/hls-ehr/images/openemr-registration.png)
+- clone Git repo
+```shell
+$ git clone https://github.com/bochoi-twlo/hls-ehr
+```
 
 - Restore appopriate backup
 ```shell
@@ -136,6 +136,10 @@ sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/patient_file/
 - Restart `openemr_app` container via Docker desktop
 
 - Wait 30 seconds ...
+
+- Open http://localhost:80/
+
+- Select 'No Thanks' in registration window ![OpenEMR Registration Window](assets/hls-ehr/images/openemr-registration.png)
 
 - Login using credentials `admin/pass` ![OpneEMR Login](assets/hls-ehr/images/openemr-login.png)
 
