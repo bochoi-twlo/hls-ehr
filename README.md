@@ -51,14 +51,13 @@ Note that this will re-launch chrome.
 ## Deploy HLS-EHR
 
 ### Clean-up Previous Installation
-If you already have a previous `hls-ehr` docker compose application running or are updating to a new version of docker stack,
+If you already have a previous `hls-ehr` docker compose stack running and want to update to a new version of docker stack,
 
 - Open Docker dashboard, select `Containers/Apps`, locate previous `hls-ehr` application
 - Click the `Delete` trash can button on the application
 - Click `Remove` in the 'Remove application' dialog
 - Wait for application to be completely removed
 - Delete the volumes
-- 
 ```shell
 $ docker volume prune
 WARNING! This will remove all local volumes not used by at least one container.
@@ -67,7 +66,7 @@ Are you sure you want to continue? [y/N] y
 Total reclaimed space: 179.2MB
 ```
 
-### Install HLS-EHR Docker Compose
+### Deploy HLS-EHR Docker Compose
 
 1. Download `docker-compose.yml` from github: 
 [download](https://raw.githubusercontent.com/bochoi-twlo/hls-ehr/main/assets/hls-ehr/docker-compose.yml).
@@ -96,19 +95,42 @@ Examine the docker dashboard and check that all 6 docker containers are running 
 ![Docker Dashboard with HLS-EHR Running](assets/hls-ehr/images/docker-dashboard.png)
 
 
-### Validate & Configure Installation
+### Configure OpenEMR
 
-#### OpenEMR
-
-- clone Git repo
+- If first-time, clone the git repo that will create a directory `hls-ehr` where you run the command below
 ```shell
 $ git clone https://github.com/bochoi-twlo/hls-ehr
 ```
 
-- Restore appopriate backup
+- get latest from git repo by executing the following from inside the `hls-ehr` directory
+```shell
+$ git pull
+```
+
+- Restore appropriate (e.g., sko) backup
 ```shell
 $ cd assets/hls-ehr/openemr
 $ ./restore-volumes.sh sko
+Restoring backups:
+  openemr_db_sko.tar.gz
+  openemr_app_sko.tar.gz
+Stopping mirth_app     ... done
+Stopping openemr_ie    ... done
+Stopping openemr_app   ... done
+Stopping mirth_db      ... done
+Stopping openemr_ie_db ... done
+Stopping openemr_db    ... done
+
+restore volume on CONTAINER=openemr_db from openemr_db_sko.tar.gz
+
+restore volume on CONTAINER=openemr_app from openemr_app_sko.tar.gz
+
+Starting openemr_db    ... done
+Starting openemr_app   ... done
+Starting openemr_ie_db ... done
+Starting openemr_ie    ... done
+Starting mirth_db      ... done
+Starting mirth_app     ... done
 ```
 
 - Launch CLI for `openemr_app` container via Docker desktop, once your CLI terminal opens copy & paste the following:
@@ -122,20 +144,45 @@ sed -i -e 's/use_cookie_secure = false/use_cookie_secure = true/' src/Common/Ses
 
 chmod +w library/js/utility.js
 sed -i -e 's/function xl(string) {/function xl(string) { return string;/' library/js/utility.js
+sed -i -e 's/top.webroot_url/parent.webroot_url/' library/js/utility.js
 
 chmod +w interface/main/tabs/js/tabs_view_model.js
 sed -i -e 's/top.restoreSession/restoreSession/g' interface/main/tabs/js/tabs_view_model.js
 
 chmod +w interface/main/finder/dynamic_finder.php
 sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/finder/dynamic_finder.php
+sed -i -e 's/top.Rtop/parent.Rtop/g' interface/main/finder/dynamic_finder.php
 
 chmod +w interface/patient_file/summary/demographics.php
 sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/patient_file/summary/demographics.php
+
+chmod +w library/dialog.js
+sed -i -e 's/top.restoreSession/parent.restoreSession/g' library/dialog.js
+
+chmod +w interface/main/calendar/modules/PostCalendar/pntemplates/default/views/day/ajax_template.html
+sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/calendar/modules/PostCalendar/pntemplates/default/views/day/ajax_template.html
+
+chmod +w interface/main/calendar/modules/PostCalendar/pntemplates/default/views/week/ajax_template.html
+sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/calendar/modules/PostCalendar/pntemplates/default/views/week/ajax_template.html
+
+chmod +w interface/main/calendar/modules/PostCalendar/pntemplates/default/views/month/ajax_template.html
+sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/calendar/modules/PostCalendar/pntemplates/default/views/month/ajax_template.html
+
+chmod +w interface/main/tabs/timeout_iframe.php
+sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/tabs/timeout_iframe.php
+
 ```
 
 - Restart `openemr_app` container via Docker desktop
 
 - Wait 30 seconds ...
+
+- Launch chrome via cli. For windows command go [here](https://stackoverflow.com/questions/3102819/disable-same-origin-policy-in-chrome)
+```shell
+open -na Google\ Chrome --args --user-data-dir=/tmp/temporary-chrome-profile-dir --disable-web-security --disable-site-isolation-trials
+```
+
+- Via chrome setting -> security & privacy, clear browsing data for 'Cached images and files'
 
 - Open http://localhost:80/
 
@@ -147,7 +194,10 @@ sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/patient_file/
 
   - filter "Patient Finder"
   - select a patient
-  - open "Calender"
+  - open "Calender" from upper-left menu
+    - changing provider
+    - changing period (i.e., day/week/month view)
 
-    - changing provider - does NOT YET work
-    - click time to create appointment - does NOT YET work
+  - **does NOT YET work**
+
+    - click time to create appointment
