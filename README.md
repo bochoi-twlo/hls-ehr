@@ -104,13 +104,13 @@ $ git clone https://github.com/bochoi-twlo/hls-ehr
 
 - get latest from git repo by executing the following from inside the `hls-ehr` directory
 ```shell
-$ git pull
+hls-ehr$ git pull
 ```
 
 - Restore appropriate (e.g., sko) backup
 ```shell
-$ cd assets/hls-ehr/openemr
-$ ./restore-volumes.sh sko
+hls-ehr$ cd assets/hls-ehr/openemr
+openemr$ ./restore-volumes.sh sko
 Restoring backups:
   openemr_db_sko.tar.gz
   openemr_app_sko.tar.gz
@@ -135,42 +135,8 @@ Starting mirth_app     ... done
 
 - Launch CLI for `openemr_app` container via Docker desktop, once your CLI terminal opens copy & paste the following:
 ```shell
-chmod +w interface/login/login.php
-sed -i -e 's/target="_top"/target="_self"/'  interface/login/login.php
-
-chmod +w src/Common/Session/SessionUtil.php
-sed -i -e 's/use_cookie_samesite = "Strict"/use_cookie_samesite = "None"/' src/Common/Session/SessionUtil.php
-sed -i -e 's/use_cookie_secure = false/use_cookie_secure = true/' src/Common/Session/SessionUtil.php
-
-chmod +w library/js/utility.js
-sed -i -e 's/function xl(string) {/function xl(string) { return string;/' library/js/utility.js
-sed -i -e 's/top.webroot_url/parent.webroot_url/' library/js/utility.js
-
-chmod +w interface/main/tabs/js/tabs_view_model.js
-sed -i -e 's/top.restoreSession/restoreSession/g' interface/main/tabs/js/tabs_view_model.js
-
-chmod +w interface/main/finder/dynamic_finder.php
-sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/finder/dynamic_finder.php
-sed -i -e 's/top.Rtop/parent.Rtop/g' interface/main/finder/dynamic_finder.php
-
-chmod +w interface/patient_file/summary/demographics.php
-sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/patient_file/summary/demographics.php
-
-chmod +w library/dialog.js
-sed -i -e 's/top.restoreSession/parent.restoreSession/g' library/dialog.js
-
-chmod +w interface/main/calendar/modules/PostCalendar/pntemplates/default/views/day/ajax_template.html
-sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/calendar/modules/PostCalendar/pntemplates/default/views/day/ajax_template.html
-
-chmod +w interface/main/calendar/modules/PostCalendar/pntemplates/default/views/week/ajax_template.html
-sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/calendar/modules/PostCalendar/pntemplates/default/views/week/ajax_template.html
-
-chmod +w interface/main/calendar/modules/PostCalendar/pntemplates/default/views/month/ajax_template.html
-sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/calendar/modules/PostCalendar/pntemplates/default/views/month/ajax_template.html
-
-chmod +w interface/main/tabs/timeout_iframe.php
-sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/tabs/timeout_iframe.php
-
+hls-ehr $ cd assets/hls-ehr/openemr
+openemr $ docker exec -i openemr_app /bin/sh < script_fix_iframe.sh
 ```
 
 - Restart `openemr_app` container via Docker desktop
@@ -201,3 +167,14 @@ open -na Google\ Chrome --args --user-data-dir=/tmp/temporary-chrome-profile-dir
   - **does NOT YET work**
 
     - click time to create appointment
+
+#### Advanced Appointment Dates by 1 Week
+
+Each time the `script_advance_appointments_one_week.sql` is run, the all appointment dates in openEMR
+will advance by 1 week.
+
+From main directory (`.../hls-ehr`)
+```shell
+hls-ehr $ cd assets/hls-ehr/openemr
+openemr $ docker exec -i openemr_db mysql -u root -proot openemr < script_advance_appointments_one_week.sql
+```
