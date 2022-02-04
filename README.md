@@ -178,3 +178,23 @@ From main directory (`.../hls-ehr`)
 hls-ehr $ cd assets/hls-ehr/openemr
 openemr $ docker exec -i openemr_db mysql -u root -proot openemr < script_advance_appointments_one_week.sql
 ```
+
+## Installer
+
+
+```shell
+docker build --tag hls-ehr-installer --platform linux/amd64 .
+
+docker build --tag hls-ehr-installer https://github.com/bochoi-twlo/hls-ehr.git#main
+```
+
+```shell
+docker run --name hls-ehr-installer --rm -p 3000:3000  \
+-v /var/run/docker.socket:/var/run/docker.socket --platform linux/amd64 \
+-e ACCOUNT_SID=${ACCOUNT_SID} -e AUTH_TOKEN=${AUTH_TOKEN} -it hls-ehr-installer
+```
+
+Open http://localhost:3000/installer/installer.html
+
+
+
