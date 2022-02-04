@@ -22,7 +22,7 @@ sed -i -e 's/top.restoreSession/self.restoreSession/' interface/main/tabs/js/use
 
 chmod +w interface/main/finder/dynamic_finder.php
 sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/finder/dynamic_finder.php
-sed -i -e 's/top.Rtop/parent.Rtop/g' interface/main/finder/dynamic_finder.php
+sed -i -e 's/top.RTop/parent.RTop/g' interface/main/finder/dynamic_finder.php
 
 chmod +w interface/patient_file/summary/demographics.php
 sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/patient_file/summary/demographics.php
@@ -31,6 +31,7 @@ chmod +w library/dialog.js
 sed -i -e 's/top.restoreSession/parent.restoreSession/g' library/dialog.js
 sed -i -e 's/top.set_opener/parent.set_opener/g' library/dialog.js
 sed -i -e 's/top.opener_list/parent.opener_list/g' library/dialog.js
+sed -i -e 's/top : window/parent : window/g' library/dialog.js
 
 chmod +w interface/main/tabs/js/dialog_utils.js
 sed -i -e 's/top.opener_list/self.opener_list/g' interface/main/tabs/js/dialog_utils.js
