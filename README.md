@@ -207,12 +207,16 @@ docker build --tag hls-ehr-installer https://github.com/bochoi-twlo/hls-ehr.git#
 ### Run Installer Docker Container
 
 Replace `${ACCOUNT_SID}` and `${AUTH_TOKEN}` with that of your target Twilio account.
-Alternatively, 
+
 ```shell
-docker run --name hls-ehr-installer --rm -p 3000:3000  \
--v /var/run/docker.socket:/var/run/docker.socket --platform linux/amd64 \
--e ACCOUNT_SID=${ACCOUNT_SID} -e AUTH_TOKEN=${AUTH_TOKEN} -it hls-ehr-installer
+docker run --name hls-ehr-installer --rm \
+--publish 3000:3000  \
+--volume /var/run/docker.sock:/var/run/docker.sock \
+--platform linux/amd64 \
+--env ACCOUNT_SID=${ACCOUNT_SID} --env AUTH_TOKEN=${AUTH_TOKEN} \
+--interactive --tty hls-ehr-installer
 ```
+
 
 
 Open http://localhost:3000/installer/installer.html
