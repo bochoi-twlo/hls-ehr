@@ -5,9 +5,6 @@ const variableInput = [];
 
 // -----------------------------------------------------------------------------
 $(document).ready(async function () {
-    $("button.get-twilio-phone").click(function () {
-        window.open("https://console.twilio.com/");
-    })
     await populate();
     checkApplication();
 });

@@ -2,7 +2,7 @@
 
 This section details the requirements for deployment and configuration of HLS EHR.
 
-HLS EMR is deployed using docker compose [here](https://github.com/bochoi-twlo/hls-ehr/blob/main/assets/hls-ehr/docker-compose.yml).
+HLS EHR is deployed using docker compose [docker-compose.yml](https://github.com/bochoi-twlo/hls-ehr/blob/main/docker-compose.yml).
 
 
 
@@ -15,6 +15,23 @@ The following prerequisites must be satisfied prior to installing the applicatio
 Install Docker desktop that includes docker compose CLI will be used to run the application installer locally on your machine.
 Goto [Docker Desktop](https://www.docker.com/products/docker-desktop) and install with default options.
 After installation make sure to start Docker desktop.
+
+### Allow Chrome Insecure `localhost` Connection
+
+OpenEMR & Mirth run over the insecure http (as opposed to certificate backed https)
+, we recommend that you use chrome only and allow chrome to open connections to insecure localhost.
+
+Either manually open a new chrome tab and open -a Google\ Chrome `chrome://flags/#allow-insecure-localhost`
+
+Or, use terminal to execute: `open -a Google\ Chrome chrome://flags/#allow-insecure-localhost`
+
+Chrome tab should open as below:
+![Chrome Flags](assets/images/chrome-flag.png)
+
+Set the option to 'Enabled' for 'Allow invalid certificate for resources loaded from localhost.'
+
+Note that this will re-launch chrome.
+
 
 ### jq & xq
 
@@ -38,13 +55,6 @@ Download ngrok from `https://ngrok.com/download`
 Follow instruction from ngrok to unzip (FYI, there is internal initiative to get enterprise license for ngrok that will assign static URL, will update this when it is place)
 
 Drag the `ngrok` application into your `/Applications` folder
-
-### Allow Chrome Insecure localhost Connection
-
-OpenEMR & Mirth run over the insecure http (as opposed to certificate backed https), we recommend that you use chrome and allow chrome to open connections to insecure localhost.
-
-In a new chrome tab, open `chrome://flags/#allow-insecure-localhost` and set the option to enabled on `allow-insecure-localhost`.
-Note that this will re-launch chrome.
 
 
 
@@ -154,7 +164,7 @@ open -na Google\ Chrome --args --user-data-dir=/tmp/temporary-chrome-profile-dir
 
 - Select 'No Thanks' in registration window ![OpenEMR Registration Window](assets/hls-ehr/images/openemr-registration.png)
 
-- Login using credentials `admin/pass` ![OpneEMR Login](assets/hls-ehr/images/openemr-login.png)
+- Login using credentials `admin/pass` ![OpneEMR Login](assets/images/openemr-login.png)
 
 - For SKO Demo, you can **ONLY** do the following as openEMR is inside an iframe:
 
@@ -181,10 +191,14 @@ openemr $ docker exec -i openemr_db mysql -u root -proot openemr < script_advanc
 
 ## Installer
 
-
+Start installer, locally from `hls-ehr` directory
 ```shell
 docker build --tag hls-ehr-installer --platform linux/amd64 .
+```
 
+Start installer, from any
+
+```shell
 docker build --tag hls-ehr-installer https://github.com/bochoi-twlo/hls-ehr.git#main
 ```
 
@@ -197,4 +211,13 @@ docker run --name hls-ehr-installer --rm -p 3000:3000  \
 Open http://localhost:3000/installer/installer.html
 
 
+
+[![](https://img.shields.io/badge/enabled-blue?style=for-the-badge)]()
+
+[![](https://img.shields.io/badge/enabled-blue)]()
+
+
+```diff
+- fdfsfsf
+```
 

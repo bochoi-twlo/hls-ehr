@@ -17,6 +17,8 @@
  * }
  * --------------------------------------------------------------------------------
  */
+const { promisify } = require('util');
+const exec = promisify(require('child_process').exec);
 const assert = require('assert');
 const { getParam, assertLocalhost } = require(Runtime.getFunctions()['helpers'].path);
 
@@ -35,6 +37,10 @@ exports.handler = async function (context, event, callback) {
       : `administration.html`; // relative url when on localhost and serice is not yet deployed
 
     console.log(THIS, `SERVICE_SID for APPLICATION_NAME (${application_name}): ${service_sid}) at ${application_url}`);
+
+    const o = await exec('docker compose ls --format json');
+    console.log(o.stdout);
+
 
     const response = {
       deploy_state   : service_sid ? 'DEPLOYED' : 'NOT-DEPLOYED',
