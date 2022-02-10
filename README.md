@@ -191,22 +191,29 @@ openemr $ docker exec -i openemr_db mysql -u root -proot openemr < script_advanc
 
 ## Installer
 
-Start installer, locally from `hls-ehr` directory
+### Build Installer Docker Image
+
+Locally from `hls-ehr` directory, if you've `git clone` the repository previously:
 ```shell
 docker build --tag hls-ehr-installer --platform linux/amd64 .
 ```
 
-Start installer, from any
+Directly from github repository:
 
 ```shell
 docker build --tag hls-ehr-installer https://github.com/bochoi-twlo/hls-ehr.git#main
 ```
 
+### Run Installer Docker Container
+
+Replace `${ACCOUNT_SID}` and `${AUTH_TOKEN}` with that of your target Twilio account.
+Alternatively, 
 ```shell
 docker run --name hls-ehr-installer --rm -p 3000:3000  \
 -v /var/run/docker.socket:/var/run/docker.socket --platform linux/amd64 \
 -e ACCOUNT_SID=${ACCOUNT_SID} -e AUTH_TOKEN=${AUTH_TOKEN} -it hls-ehr-installer
 ```
+
 
 Open http://localhost:3000/installer/installer.html
 
