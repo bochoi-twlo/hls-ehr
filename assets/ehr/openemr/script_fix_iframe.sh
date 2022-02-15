@@ -63,8 +63,9 @@ chmod +w library/validation/validation_script.js.php
 sed -i -e 's/top.restoreSession/parent.restoreSession/' library/validation/validation_script.js.php
 
 chmod +w interface/main/calendar/find_appt_popup.php
-sed -i -e 's/top.restoreSession/parent.restoreSession/g' library/validation/validation_script.js.php
+sed -i -e 's/top.restoreSession/parent.restoreSession/g' interface/main/calendar/find_appt_popup.php
 # 2 more replaced - chec!!!
 
 #chmod +w interface/main/messages/messages.php
 #sed -i -e 's/top.restoreSession/restoreSession/g' interface/main/messages/messages.php
+

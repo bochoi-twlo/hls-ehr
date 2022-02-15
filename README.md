@@ -102,7 +102,7 @@ Creating mirth_app     ... done
 
 Examine the docker dashboard and check that all 6 docker containers are running (i.e., green) like below.
 
-![Docker Dashboard with HLS-EHR Running](assets/hls-ehr/images/docker-dashboard.png)
+![Docker Dashboard with HLS-EHR Running](assets/images/docker-dashboard.png)
 
 
 ### Configure OpenEMR

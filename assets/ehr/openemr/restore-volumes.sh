@@ -1,50 +1,58 @@
-#!/bin/zsh
-set -e
+#!/bin/bash
+set -e;
+# --------------------------------------------------------------------------------
+# script to restore openemr volumes to deployed hls-ehr
+# --------------------------------------------------------------------------------
+if [ -z ${1} ]; then
+  echo 'Usage: ./restore-volumes your-backup-name';
+  exit 1;
+fi
+BACKUP_NAME=${1};
 
+# check hls-ehr
+EXISTS=$(docker container ls --all | grep openemr_app | wc -l);
+if [ $EXISTS == '0' ]; then
+  echo 'no hls-ehr docker-compose stack!!! exiting ...';
+  exit 1;
+else
+  echo 'found hls-ehr docker-compose stack. proceeding ...';
+fi
+
+# --------------------------------------------------------------------------------
+function cleanup {
+  [ "$(docker ps --all | grep hls-helper)" ] && docker rm --force hls-helper;
+}
+trap cleanup EXIT
+
+# --------------------------------------------------------------------------------
 function restore_volume {
-  DOCKER_CONTAINER=${1}
-  BACKUP_TARFILE=${2}
+  DOCKER_CONTAINER=${1};
+  BACKUP_TARFILE=${2};
 
-  echo
-  echo "restore volume on CONTAINER=${DOCKER_CONTAINER} from ${BACKUP_TARFILE}.gz"
+  echo "restore volume on CONTAINER=${DOCKER_CONTAINER} from ${BACKUP_TARFILE}.gz";
+  if [ ! -f "${BACKUP_TARFILE}.gz" ]; then
+    echo "${BACKUP_TARFILE}.gz not found!!!";
+    exit 1;
+  fi
 
-  gunzip --stdout ${BACKUP_TARFILE}.gz > ${BACKUP_TARFILE}
+  gunzip --stdout ${BACKUP_TARFILE}.gz > ${BACKUP_TARFILE};
 
-  # note the untar location is /var to restore var/lib/mysql
-  docker run --rm --volumes-from ${DOCKER_CONTAINER} --volume $(pwd):/backup ubuntu \
-    bash -c "cd /var && tar xf /backup/${BACKUP_TARFILE} --strip 1"
+  docker run --name 'hls-helper' --volumes-from ${DOCKER_CONTAINER} -i -d ubuntu;
 
-  rm ${BACKUP_TARFILE}
-  echo
+  docker cp ${BACKUP_TARFILE} hls-helper:${BACKUP_TARFILE};
+  docker exec hls-helper tar -xf ${BACKUP_TARFILE};
+
+  docker rm --force hls-helper;
+  echo "... done";
 }
 
+# ---------- main execution ----------------------------------------------------------------------
+echo 'stopping docker-compose stack';
+docker compose --project-name 'hls-ehr' stop;
 
-if [ -z ${1} ]; then
-  echo 'Usage: ./restore-volume your-backup-name';
-#  echo '  - default s3 location is s3://twlo-hls-artifacts/hls-flex-sko-demo';
-  exit 1;
-fi
-BACKUP_NAME=${1}
+restore_volume 'openemr_db' "openemr_db_${BACKUP_NAME}.tar";
+restore_volume 'openemr_app' "openemr_app_${BACKUP_NAME}.tar";
 
-BACKUP_DB="openemr_db_${BACKUP_NAME}"
-if [ ! -f "${BACKUP_DB}.tar.gz" ]; then
-  echo "${BACKUP_DB}.tar.gz not found!";
-  exit 1;
-fi
-BACKUP_APP="openemr_app_${BACKUP_NAME}"
-if [ ! -f "${BACKUP_APP}.tar.gz" ]; then
-  echo "${BACKUP_APP}.tar.gz not found!";
-  exit 1;
-fi
-echo 'Restoring backups:'
-echo '  '${BACKUP_DB}'.tar.gz'
-echo '  '${BACKUP_APP}'.tar.gz'
+echo 'starting docker-compose stack';
+docker compose --project-name 'hls-ehr' start;
 
-
-docker-compose stop
-
-restore_volume 'openemr_db' "${BACKUP_DB}.tar"
-
-restore_volume 'openemr_app' "${BACKUP_APP}.tar"
-
-docker-compose start
