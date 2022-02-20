@@ -46,7 +46,7 @@ $ yq --version              # confirm installation
 yq 2.13.0
 ```
 
-### ngrok, optional
+### ngrok
 
 If you will demo a blue print that will need to connect back to your macbook from the internet (e.g., "patient appointment management"), you need to install a reverse proxy.
 
@@ -61,22 +61,58 @@ Drag the `ngrok` application into your `/Applications` folder
 ## Deploy HLS-EHR
 
 ### Clean-up Previous Installation
-If you already have a previous `hls-ehr` docker compose stack running and want to update to a new version of docker stack,
 
-- Open Docker dashboard, select `Containers/Apps`, locate previous `hls-ehr` application
-- Click the `Delete` trash can button on the application
-- Click `Remove` in the 'Remove application' dialog
-- Wait for application to be completely removed
-- Delete the volumes
+Installer can remove, existing installation of `hls-ehr`.
+
+However, if you have previous installed openEMR, please remove the running docker container and image via the Docker Desktop.
+
+After container and image removal, unsued volumes need to be removed via
 ```shell
-$ docker volume prune
-WARNING! This will remove all local volumes not used by at least one container.
-Are you sure you want to continue? [y/N] y
-...
-Total reclaimed space: 179.2MB
+docker volume prune --force
 ```
 
+Also, ensure that you do not have any running processes that is listening on port 3000 such development servers.
+
+
 ### Deploy HLS-EHR Docker Compose
+
+#### Build Installer Docker Image
+
+Directly from github repository:
+```shell
+docker build --tag hls-ehr-installer https://github.com/bochoi-twlo/hls-ehr.git#main
+```
+
+For machines running Apple M1 chip add the option `--platform linux/amd64`.
+To build fresh image add the option `--no-cache`.
+
+Alternatively, if you have git repo cloned locally
+```shell
+docker build --tag hls-ehr-installer .
+```
+
+#### Run Installer Docker Container
+
+Replace `${ACCOUNT_SID}` and `${AUTH_TOKEN}` with that of your target Twilio account.
+
+```shell
+docker run --name hls-ehr-installer --rm \
+--publish 3000:3000  \
+--volume /var/run/docker.sock:/var/run/docker.sock \
+--env ACCOUNT_SID=${ACCOUNT_SID} --env AUTH_TOKEN=${AUTH_TOKEN} \
+--interactive --tty hls-ehr-installer
+```
+
+For machines running Apple M1 chip add the option `--platform linux/amd64`.
+
+#### Open installer in browser
+
+Open http://localhost:3000/installer/index.html.
+
+Enter Control-C in the terminal to quit the installer
+, or alternatively remove the `hls-ehr-installer` docker container via the Docker Desktop
+
+# Archive, ignore
 
 1. Download `docker-compose.yml` from github: 
 [download](https://raw.githubusercontent.com/bochoi-twlo/hls-ehr/main/assets/hls-ehr/docker-compose.yml).
@@ -190,36 +226,6 @@ openemr $ docker exec -i openemr_db mysql -u root -proot openemr < script_advanc
 ```
 
 ## Installer
-
-### Build Installer Docker Image
-
-Locally from `hls-ehr` directory, if you've `git clone` the repository previously:
-```shell
-docker build --tag hls-ehr-installer --platform linux/amd64 .
-```
-
-Directly from github repository:
-
-```shell
-docker build --tag hls-ehr-installer https://github.com/bochoi-twlo/hls-ehr.git#main
-```
-
-### Run Installer Docker Container
-
-Replace `${ACCOUNT_SID}` and `${AUTH_TOKEN}` with that of your target Twilio account.
-
-```shell
-docker run --name hls-ehr-installer --rm \
---publish 3000:3000  \
---volume /var/run/docker.sock:/var/run/docker.sock \
---platform linux/amd64 \
---env ACCOUNT_SID=${ACCOUNT_SID} --env AUTH_TOKEN=${AUTH_TOKEN} \
---interactive --tty hls-ehr-installer
-```
-
-
-
-Open http://localhost:3000/installer/installer.html
 
 
 
