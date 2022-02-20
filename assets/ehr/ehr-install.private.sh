@@ -21,11 +21,11 @@ fi
 
 # --------------------------------------------------------------------------------
 output 'installing docker-compose stack'
-docker compose --project-name 'hls-ehr' up --no-start
+docker-compose --project-name 'hls-ehr' up --no-start
 
 # this is needed for attached docker volumes to properly initialize
 output 'initializing docker-compose stack'
-docker compose --project-name 'hls-ehr' start
+docker-compose --project-name 'hls-ehr' start
 
 output 'wait 60 seconds ...'
 sleep 60

@@ -40,7 +40,7 @@ exports.handler = async function(context, event, callback) {
         }
 
         {
-          const cmd = 'docker compose --project-name hls-ehr stop';
+          const cmd = 'docker-compose --project-name hls-ehr stop';
           execSync(cmd, {stdio: 'inherit'});
         }
 
@@ -55,7 +55,7 @@ exports.handler = async function(context, event, callback) {
         }
 
         {
-          const cmd = 'docker compose --project-name hls-ehr start';
+          const cmd = 'docker-compose --project-name hls-ehr start';
           execSync(cmd, {stdio: 'inherit'});
         }
         console.log(THIS, `HLS-EHR deployed successfully`);
