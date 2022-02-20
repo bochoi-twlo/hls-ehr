@@ -5,7 +5,6 @@
 
 body {
     padding: 20px 2% 20px 2%;
-    font-size: 1.9em;
 }
 
 /*
@@ -35,7 +34,6 @@ td.configuration-value {
 
 @media only screen and (min-width: 992px) {
     body {
-        font-size: 1.6em;
     }
 }
 
@@ -81,7 +79,6 @@ h4 {
     display: none;
     color: white;
     font-weight: normal;
-    font-size: 15px;
     margin-left: -8px; /* moves the tooltip to the right */
     margin-top: -80px; /* moves it down */
     position: absolute;
@@ -93,6 +90,7 @@ h4 {
     padding: 5px;
     text-align: center;
 }
+
 @media only screen and (min-width: 992px) {
     .tooltip {
         margin-top: 10px;
@@ -119,7 +117,6 @@ h4 {
 }
 
 .configure-label-long {
-    font-size: small;
     margin-bottom: 10px;
 }
 
@@ -135,7 +132,6 @@ h4 {
 }
 
 .configure-error-login {
-    font-size: 15px;
     color: red;
 }
 
@@ -146,7 +142,6 @@ h4 {
 .configure-error {
     display: none;
     color: red;
-    font-size: 15px;
 }
 
 /*
@@ -163,7 +158,7 @@ span.checkmark {
     margin-bottom: 30px;
 }
 
-.service-loader {
+.deployable-loader {
     border: 4px solid rgb(244, 244, 246);
     border-top: 4px solid rgb(18, 28, 45);
     border-radius: 50%;
@@ -176,7 +171,7 @@ span.checkmark {
     margin-top: -5px;
 }
 
-#service-deploy .button.loading {
+#service-deploy #ehr-deploy .button.loading {
     background: rgb(244, 244, 246);
     border: 1px solid rgb(244, 244, 246);
     color: rgb(96, 107, 133);

@@ -9,12 +9,9 @@
  * --------------------------------------------------------------------------------
  */
 const assert = require("assert");
-const { getParam, getAllParams } = require(Runtime.getFunctions()['helpers'].path);
-const { execSync } = require('child_process');
-const { TwilioServerlessApiClient } = require('@twilio-labs/serverless-api');
-const { getListOfFunctionsAndAssets } = require('@twilio-labs/serverless-api/dist/utils/fs');
-const fs = require('fs');
 const path = require('path')
+const { execSync } = require('child_process');
+const { getParam } = require(Runtime.getFunctions()['helpers'].path);
 
 
 exports.handler = async function(context, event, callback) {
@@ -36,19 +33,31 @@ exports.handler = async function(context, event, callback) {
         const environmentVariables = event.configuration;
         console.log(THIS, 'configuration:', environmentVariables);
 
-        // create docker-compose stack
-        let fp = Runtime.getAssets()['/ehr/install-ehr.sh'].path;
-        execSync(fp, { shell: '/bin/bash', stdio: 'inherit' });
+        {
+          // create docker-compose stack
+          const fp = Runtime.getAssets()['/ehr/ehr-install.sh'].path;
+          execSync(fp, {shell: '/bin/bash', stdio: 'inherit'});
+        }
 
-        // restore docker volumes
-        fp = Runtime.getAssets()['/ehr/openemr/restore-volumes.sh'].path;
-        const working_directory = path.dirname(fp);
-        execSync(`${fp} sko`, { cwd: working_directory, shell: '/bin/bash', stdio: 'inherit' });
+        {
+          const cmd = 'docker compose --project-name hls-ehr stop';
+          execSync(cmd, {stdio: 'inherit'});
+        }
 
-        // apply iframe fix
-        const cmd = 'docker exec -i openemr_app /bin/sh < script_fix_iframe.sh';
-        execSync(cmd, { cwd: working_directory, stdio: 'inherit' });
+        {        // apply iframe fix
+          const fp = Runtime.getAssets()['/ehr/openemr-fix-iframe.sh'].path;
+          execSync(fp, {cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit'});
+        }
 
+        {        // restore docker volumes
+          const fp = Runtime.getAssets()['/ehr/openemr-restore-volumes.sh'].path;
+          execSync(fp, {cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit'});
+        }
+
+        {
+          const cmd = 'docker compose --project-name hls-ehr start';
+          execSync(cmd, {stdio: 'inherit'});
+        }
         console.log(THIS, `HLS-EHR deployed successfully`);
       }
       break;
@@ -57,7 +66,7 @@ exports.handler = async function(context, event, callback) {
         const deployed = execSync("docker ps --all | grep openemr_app | wc -l");
         if (deployed.toString().trim() != '1') throw new Error('HLS-EHR not deployed!!!');
 
-        const fp = Runtime.getAssets()['/ehr/uninstall-ehr.sh'].path;
+        const fp = Runtime.getAssets()['/ehr/ehr-uninstall.sh'].path;
         execSync(fp, { shell: '/bin/bash', stdio: 'inherit' });
       }
       break;
