@@ -112,6 +112,31 @@ Open http://localhost:3000/installer/index.html.
 Enter Control-C in the terminal to quit the installer
 , or alternatively remove the `hls-ehr-installer` docker container via the Docker Desktop
 
+#### Accessing OpenEMR
+
+##### Open directly
+
+Either click the link `Open EHR` in the installer
+that will open http://localhost:80/interface/login/login.php?site=default
+and login using the credentials `admin/pass`
+
+Note that if you had previously access openEMR
+, some client javascript file may be cached in your browser.
+Please clear you cached files.
+
+##### Open inside Twilio Flex Agent Desktop
+
+OpenEMR can be embedded in the Twilio Flex agent desktop via `iframe`.
+
+Launch chrome via cli.
+```shell
+open -na Google\ Chrome --args --user-data-dir=/tmp/temporary-chrome-profile-dir --disable-web-security --disable-site-isolation-trials
+```
+For windows command go [here](https://stackoverflow.com/questions/3102819/disable-same-origin-policy-in-chrome)
+
+
+
+
 # Archive, ignore
 
 1. Download `docker-compose.yml` from github: 
