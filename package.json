@@ -8,16 +8,10 @@
     "deploy": "twilio-run deploy"
   },
   "dependencies": {
-    "twilio": "^3.72.0",
-    "@twilio-labs/serverless-api": "^5.4.0",
-    "@twilio/runtime-handler": "1.2.1",
-    "configure-env": "^2.0.0-1",
-    "follow-redirects": ">=1.14.7"
+    "twilio": "3.72.0",
+    "configure-env": "2.0.0-1"
   },
-  "devDependencies": {
-    "twilio-run": "^3.4.0",
-    "follow-redirects": ">=1.14.7"
-  },
+  "devDependencies": {},
   "engines": {
     "node": "14"
   }

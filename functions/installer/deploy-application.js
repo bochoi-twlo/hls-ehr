@@ -1,45 +1,35 @@
 'use strict';
 /* --------------------------------------------------------------------------------
- * deploys application to target Twilio account.
- * - deploy services & makeEditable
- * - set environment variables
- * - seed data
+ * deploys application (service) to target Twilio account.
  *
  * NOTE: that this function can only be run on localhost
  *
- * - service identified via unique_name = APPLICATION_NAME in helpers.private.js
+ * input:
+ * event.action: CREATE|UPDATE|DELETE, defaults to CREATE|UPDATE depending on deployed state
  *
- * event:
- * .parameters: object of key-value parameters to configure
- *
- * returns:
- * {
- *   deploy_state: DEPLOYED|NOT-DEPLOYED
- *   service_sid : SID of deployed service
- * }
+ * service identified via unique_name = APPLICATION_NAME in helpers.private.js
  * --------------------------------------------------------------------------------
  */
-const { getParam, getAllParams, isLocalhost, assertLocalhost } = require(Runtime.getFunctions()['helpers'].path);
+const assert = require("assert");
+const { getParam, getAllParams } = require(Runtime.getFunctions()['helpers'].path);
 const { TwilioServerlessApiClient } = require('@twilio-labs/serverless-api');
 const { getListOfFunctionsAndAssets } = require('@twilio-labs/serverless-api/dist/utils/fs');
 const fs = require('fs');
-const http = require('http');
-const https = require('https');
-const assert = require("assert");
 
 
 exports.handler = async function(context, event, callback) {
   const THIS = 'deploy-application';
 
+  assert(context.DOMAIN_NAME.startsWith('localhost:'), `Can only run on localhost!!!`);
   console.time(THIS);
-  assertLocalhost(context);
   try {
-    assert(event.configuration.APPLICATION_NAME, '.env file does not contain APPLICATION_NAME variable!!!');
+    assert(event.configuration.APPLICATION_NAME, 'missing APPLICATION_NAME variable!!!');
     const application_name = event.configuration.APPLICATION_NAME;
 
     console.log(THIS, `Deploying Twilio service ... ${application_name}`);
     const environmentVariables = event.configuration;
     console.log(THIS, 'configuration:', environmentVariables);
+
     const service_sid = await deployService(context, environmentVariables);
     console.log(THIS, `Deployed: ${service_sid}`);
 
@@ -52,10 +42,6 @@ exports.handler = async function(context, event, callback) {
     console.log(THIS, 'Provisioning dependent Twilio services');
     const params = await getAllParams(context);
     //console.log(THIS, params);
-
-    console.log(THIS, 'Seed application data');
-    const summary = await seedData(context);
-    console.log(THIS, summary);
 
     console.log(THIS, `Completed deployment of ${application_name}`);
 
@@ -153,38 +139,4 @@ async function deployService(context, envrionmentVariables = {}) {
   service_sid = await getParam(context, 'SERVICE_SID');
 
   return service_sid;
-}
-
-
-/* --------------------------------------------------------------------------------
- * seed application data.
- *
- * returns: seed summary
- * --------------------------------------------------------------------------------
- */
-async function seedData(context) {
-  const options = {
-    hostname: context.DOMAIN_NAME.split(':')[0],
-    port: context.DOMAIN_NAME.split(':')[1] ? context.DOMAIN_NAME.split(':')[1] : '443',
-    path: '/datastore/seed',
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-  };
-  const http_protocol = isLocalhost(context) ? http : https;
-
-  return new Promise((resolve, reject) => {
-    const request = http_protocol.request(options, (response) => {
-      let data = '';
-      response.on('data', (chunk) => {
-        data += chunk;
-      });
-      response.on('end', () => {
-        resolve(JSON.parse(data));
-      });
-      response.on('error', (error) => {
-        reject(error);
-      });
-    });
-    request.end();
-  });
 }

@@ -1,0 +1,5 @@
+MSH|^~\&|OPENEMR|OWLHEALTH|TWILIO||YYYYMMDDHHMMSS||SIU^S12|MessageControlID|P|2.3||||||
+SCH|appointment_id||||appointment_id|Appointment|Reason for Appointment||60|m|^^60^YYYYMMDDHHMMSS^YYYYMMDDHHMMSS|provider_id^provider_last_name^provider_first_name^|provider_callback_phone|||9^Money^Penny^||||9^Money^Penny^|||||event_type
+PID|1||patient_id||patient_last_name^patient_first_name||YYYYMMDD|M|||||patient_phone_number||||||||||||||||||||||||||
+RGS|1||
+AIL|1||appointment_location^^^appointment_location|^LOC||||||||

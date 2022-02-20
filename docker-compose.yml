@@ -1,0 +1,116 @@
+# Use admin/pass as user/password credentials to login to openemr (from OE_USER and OE_PASS below)
+# MYSQL_HOST and MYSQL_ROOT_PASS are required for openemr
+# MYSQL_USER, MYSQL_PASS, OE_USER, MYSQL_PASS are optional for openemr and
+#   if not provided, then default to openemr, openemr, admin, and pass respectively.
+version: '3.1'
+services:
+
+  openemr_db:
+    container_name: openemr_db
+    restart: always
+    image: mariadb:10.5
+    ports:
+      - 3306:3306/tcp
+    command: ['mysqld','--character-set-server=utf8mb4']
+    volumes:
+      - v_openemr_db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+
+  openemr_app:
+    container_name: openemr_app
+    restart: always
+    image: openemr/openemr:6.0.0
+    ports:
+      - 80:80/tcp
+      - 443:443/tcp
+    volumes:
+      - v_openemr_log:/var/log
+      - v_openemr_site:/var/www/localhost/htdocs/openemr/sites
+    environment:
+      MYSQL_HOST: openemr_db
+      MYSQL_ROOT_PASS: root
+      MYSQL_USER: openemr
+      MYSQL_PASS: openemr
+      OE_USER: admin
+      OE_PASS: pass
+    depends_on:
+      - openemr_db
+
+  openemr_ie_db:
+    container_name: openemr_ie_db
+    restart: always
+    image: postgres:13.2
+    environment:
+      - POSTGRES_USER=mirthdb
+      - POSTGRES_PASSWORD=mirthdb
+      - POSTGRES_DB=mirthdb
+    expose:
+      - 5432
+    ports:
+      - 5433:5432/tcp
+
+  openemr_ie:
+    container_name: openemr_ie
+    restart: always
+    image: nextgenhealthcare/connect:3.10.1
+    volumes:
+      - v_openemr_ie_app:/opt/connect/appdata
+    environment:
+      - DATABASE=postgres
+      - DATABASE_URL=jdbc:postgresql://openemr_ie_db:5432/mirthdb
+      - DATABASE_MAX_CONNECTIONS=20
+      - DATABASE_USERNAME=mirthdb
+      - DATABASE_PASSWORD=mirthdb
+      - KEYSTORE_STOREPASS=docker_storepass
+      - KEYSTORE_KEYPASS=docker_keypass
+      - VMOPTIONS=-Xmx512m
+    ports:
+      - 8081:8080/tcp
+      - 8444:8443/tcp
+    depends_on:
+      - openemr_ie_db
+      - openemr_db
+
+  mirth_db:
+    container_name: mirth_db
+    restart: always
+    image: postgres:13.2
+    environment:
+      - POSTGRES_USER=mirthdb
+      - POSTGRES_PASSWORD=mirthdb
+      - POSTGRES_DB=mirthdb
+    expose:
+      - 5432
+    ports:
+      - 5432:5432/tcp
+
+  mirth_app:
+    container_name: mirth_app
+    restart: always
+    image: nextgenhealthcare/connect:3.10.1
+    volumes:
+      - v_mirth_app:/opt/connect/appdata
+    environment:
+      - DATABASE=postgres
+      - DATABASE_URL=jdbc:postgresql://mirth_db:5432/mirthdb
+      - DATABASE_MAX_CONNECTIONS=20
+      - DATABASE_USERNAME=mirthdb
+      - DATABASE_PASSWORD=mirthdb
+      - KEYSTORE_STOREPASS=docker_storepass
+      - KEYSTORE_KEYPASS=docker_keypass
+      - VMOPTIONS=-Xmx512m
+    ports:
+      - 8080:8080/tcp
+      - 8443:8443/tcp
+      - 8661:8661/tcp
+    depends_on:
+      - mirth_db
+      - openemr_db
+
+volumes:
+  v_openemr_log: {}
+  v_openemr_site: {}
+  v_openemr_db: {}
+  v_openemr_ie_app: {}
+  v_mirth_app: {}

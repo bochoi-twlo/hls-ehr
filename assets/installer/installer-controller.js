@@ -5,11 +5,8 @@ const variableInput = [];
 
 // -----------------------------------------------------------------------------
 $(document).ready(async function () {
-    $("button.get-twilio-phone").click(function () {
-        window.open("https://console.twilio.com/");
-    })
     await populate();
-    checkApplication();
+    checkDeployment();
 });
 
 
@@ -155,41 +152,66 @@ async function validateAdministratorPhone(field, value) {
 }
 
 /* --------------------------------------------------------------------------------
- * check deployment of Service (by uniqueName)
+ * check deployment of all deployables
  * --------------------------------------------------------------------------------
  */
-function checkApplication() {
-    const THIS = checkApplication.name;
-    try {
-         fetch('/installer/check-application', {
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-        })
-           .then((response) => response.json())
-           .then((response) => {
-               console.log(THIS, 'server returned:', response);
-               $('#service-deploy .button').removeClass('loading');
-               $('.service-loader').hide();
-               if (response.deploy_state === 'NOT-DEPLOYED') {
-                   $('#service-deploy-button').text('Deploy Telehealth Application');
-                   $('#service-deploy').show();
-               } else if (response.deploy_state === 'DEPLOYED') {
-                   $('#service-deploy-button').text('Re-deploy Telehealth Application');
-                   $('#service-deploy').show();
-                   $('#service-deploying').hide();
-                   $('#service-deployed').show();
-                   $('#application-open').attr('href', response.application_url);
-                   $('#service-open').attr('href', `https://www.twilio.com/console/functions/api/start/${response.service_sid}`);
-               } else {
-                   throw new Error(response);
-               }
-           });
-    } catch (err) {
-        console.log(THIS, err);
-    }
+function checkDeployment() {
+  const THIS = checkDeployment.name;
+  try {
+    fetch('/installer/check-deployment', {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+      .then((raw) => raw.json())
+      .then((response) => {
+        console.log(THIS, 'server returned:', response);
+        if (! 'service' in response) throw new Error('"service" deployable missing"!!!');
+        if (! 'ehr'     in response) throw new Error('"ehr" deployable missing"!!!');
+        $('.deployable-loader').hide();
+
+        {
+          $('#service-deploy .button').removeClass('loading');
+          const deployable = response.service;
+          if (deployable.deploy_state === 'NOT-DEPLOYED') {
+            $('#service-deploy-button').text('Deploy Service');
+            $('#service-deploy').show();
+          } else if (deployable.deploy_state === 'DEPLOYED') {
+            $('#service-deploy-button').text('Re-deploy Service');
+            $('#service-deploy').show();
+            $('#service-deploying').hide();
+            $('#service-deployed').show();
+            $('#service-open').attr('href', response.application_url);
+            $('#service-console-open').attr('href', `https://www.twilio.com/console/functions/api/start/${response.service_sid}`);
+          }
+        }
+
+        {
+          $('#ehr-deploy .button').removeClass('loading');
+          const deployable = response.ehr;
+          if (deployable.deploy_state === 'NOT-DEPLOYED') {
+            $('#ehr-deploy').show();
+            $('#ehr-deployed').hide();
+            $('#ehr-deploy-button').show();
+            $('#ehr-remove-button').hide();
+            $('#ehr-deploying').hide();
+          } else if (deployable.deploy_state === 'DEPLOYED') {
+            $('#ehr-deploy').show();
+            $('#ehr-deployed').show();
+            $('#ehr-appointment-week').text(`: week of ${deployable.appointment_week}`);
+            $('#ehr-open').attr('href', 'http://localhost:80/interface/login/login.php?site=default');
+            $('#ehr-credentials').text(': use credentials admin/pass');
+            $('#ehr-deploy-button').hide();
+            $('#ehr-remove-button').show();
+            $('#ehr-deploying').hide();
+          }
+        }
+      });
+  } catch (err) {
+    console.log(THIS, err);
+  }
 }
 
 
@@ -269,14 +291,114 @@ function deployApplication(e) {
           $('#service-deploying').hide();
           $('#service-deploy-button').prop('disabled', false);
           console.log(THIS, 'successfully deployed');
-          checkApplication();
+          checkDeployment();
       })
       .catch ((err) => {
-          console.log(THIS, err);
+          alert(THIS, err);
           $('#service-deploying').hide();
           $('#service-deploy-button').prop('disabled', false);
+          checkDeployment();
 //          $('#service-deploy .button').removeClass('loading');
 //          $('.service-loader.button-loader').hide();
       });
+}
+
+/* --------------------------------------------------------------------------------
+ * deployEHR
+ * --------------------------------------------------------------------------------
+ */
+function deployEHR(e) {
+  const THIS = deployEHR.name;
+
+  e.preventDefault();
+
+  console.log(THIS, 'deploying EHR ...');
+  $('#ehr-deploy-button').prop('disabled', true);
+  $('#ehr-deploying').show();
+  fetch('/installer/deploy-ehr', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({action: 'CREATE'}),
+  })
+    .then(() => {
+      $('#ehr-deploying').hide();
+      $('#ehr-deploy-button').prop('disabled', false);
+      checkDeployment();
+    })
+    .catch((err) => {
+      window.alert(err);
+      $('#ehr-deploying').hide();
+      $('#ehr-deploy-button').prop('disabled', false);
+      checkDeployment();
+    });
+}
+
+/* --------------------------------------------------------------------------------
+ * removeEHR
+ * --------------------------------------------------------------------------------
+ */
+function removeEHR(e) {
+  const THIS = removeEHR.name;
+
+  e.preventDefault();
+
+  console.log(THIS, 'removing EHR ...');
+  $('#ehr-remove-button').prop('disabled', true);
+  $('#ehr-deploying').show();
+  fetch('/installer/deploy-ehr', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action: 'DELETE' }),
+  })
+    .then(() => {
+      $('#ehr-deploying').hide();
+      $('#ehr-remove-button').prop('disabled', false);
+      console.log(THIS, 'success');
+      checkDeployment();
+    })
+    .catch ((err) => {
+      console.log(THIS, err);
+      $('#ehr-deploying').hide();
+      $('#ehr-remove-button').prop('disabled', false);
+    });
+}
+
+/* --------------------------------------------------------------------------------
+ * adjustEHRDate
+ * --------------------------------------------------------------------------------
+ */
+function adjustEHRDate(e) {
+  const THIS = adjustEHRDate.name;
+
+  e.preventDefault();
+
+  console.log(THIS, 'adjusting...');
+  $('#ehr-adjust-date-button').prop('disabled', true);
+  $('#ehr-deploying').show();
+  fetch('/installer/adjust-appointment-dates', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({}),
+  })
+    .then(() => {
+      $('#ehr-deploying').hide();
+      $('#ehr-adjust-date-button').prop('disabled', false);
+      console.log(THIS, 'success');
+      checkDeployment();
+    })
+    .catch ((err) => {
+      console.log(THIS, err);
+      $('#ehr-deploying').hide();
+      $('#ehr-adjust-date-button').prop('disabled', false);
+    });
 }
 
