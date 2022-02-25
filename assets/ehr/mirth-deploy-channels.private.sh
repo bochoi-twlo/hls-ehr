@@ -64,9 +64,9 @@ fi
 #
 # --------------------------------------------------------------------------------
 function deploy_channel {
-  URL_N_PORT=${1}
+  TARGET_HOST=${1}
   CHANNEL_NAME=${2}
-  output "deploying channel to ${URL_N_PORT}"
+  output "deploying channel to ${TARGET_HOST}:8443"
   output "CHANNEL_NAME=${CHANNEL_NAME}"
 
   # check channel file
@@ -83,13 +83,13 @@ function deploy_channel {
   output "CHANNEL_ID=${CHANNEL_ID}"
 
   # check if channel is already deployed
-  DEPLOYED=$(curl --silent --insecure --request GET "https://${URL_N_PORT}/api/channels/${CHANNEL_ID}" --user admin:admin)
+  DEPLOYED=$(docker exec ${TARGET_HOST} curl --silent --insecure --request GET "https://${TARGET_HOST}:8443/api/channels/${CHANNEL_ID}" --user admin:admin)
   if [[ -z "${DEPLOYED}" ]]; then
     output "channel not deployed previously, proceeding ..."
   else
     output "channel deployed previously, so deleting ..."
     output "deleting CHANNEL_NAME=${CHANNEL_NAME} ... "
-    curl --silent --insecure --request DELETE "https://${URL_N_PORT}/api/channels/${CHANNEL_ID}" --user admin:admin
+    docker exec ${TARGET_HOST} curl --silent --insecure --request DELETE "https://${TARGET_HOST}:8443/api/channels/${CHANNEL_ID}" --user admin:admin
   fi
 
   output "creating deployable channel file: ${CHANNEL_NAME}.xml"
@@ -113,8 +113,8 @@ function deploy_channel {
     exit 1
   fi
 
-  output "deploying ${CHANNEL_NAME}.xml to ${URL_N_PORT}"
-  RESULT=$(curl --silent --insecure --request POST "https://${URL_N_PORT}/api/channels" \
+  output "deploying ${CHANNEL_NAME}.xml to ${TARGET_HOST}:8443"
+  RESULT=$(docker exec ${TARGET_HOST} curl --silent --insecure --request POST "https://${TARGET_HOST}:8443/api/channels" \
     --header "Content-Type: application/xml" \
     --data @${CHANNEL_NAME}.xml \
     --user admin:admin | jq '.boolean')
@@ -130,31 +130,23 @@ function deploy_channel {
 
 # ---------- main execution ----------------------------------------------------------------------
 
-# check if inside docker container
-if [ -f /proc/1/cgroup ]; then
-  # inside docker
-  MIRTH_URL='mirth_app:8443'
-  IE_URL='openemr_ie:8443'
-else
-  # not inside docker
-  MIRTH_URL='127.0.0.1:8443'
-  IE_URL='127.0.0.1:8444'
-fi
+MIRTH_HOST='mirth_app'
+IE_HOST='openemr_ie'
 
 # mirth_app is running on docker container port 8443 / host port 8443
-deploy_channel ${MIRTH_URL} 'appointments-emr2twlo'
+deploy_channel ${MIRTH_HOST} 'appointments-emr2twlo'
 
-deploy_channel ${MIRTH_URL} 'appointments-twlo2emr'
+deploy_channel ${MIRTH_HOST} 'appointments-twlo2emr'
 
-curl --silent --insecure --request POST "https://${MIRTH_URL}/api/channels/_deploy" --user admin:admin
-output "deployed channels on ${MIRTH_URL} ..."
+docker exec ${MIRTH_HOST} curl --silent --insecure --request POST "https://${MIRTH_HOST}:8443/api/channels/_deploy" --user admin:admin
+output "deployed channels on ${MIRTH_HOST}:8443 ..."
 
 
 # openemr_ie is running on docker container port 8443 / host port 8444
-deploy_channel ${IE_URL} 'appointments-outbound'
+deploy_channel ${IE_HOST} 'appointments-outbound'
 
-deploy_channel ${IE_URL} 'appointments-inbound'
+deploy_channel ${IE_HOST} 'appointments-inbound'
 
-curl --silent --insecure --request POST "https://${IE_URL}/api/channels/_deploy" --user admin:admin
-output "deployed channels on ${IE_URL} ..."
+docker exec ${IE_HOST} curl --silent --insecure --request POST "https://${IE_HOST}:8443/api/channels/_deploy" --user admin:admin
+output "deployed channels on ${IE_HOST}:8443 ..."
 
