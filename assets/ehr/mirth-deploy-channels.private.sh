@@ -116,12 +116,13 @@ function deploy_channel {
   RESULT=$(docker exec ${TARGET_HOST} curl --silent --insecure --request POST "https://${TARGET_HOST}:8443/api/channels" \
     --header "Content-Type: application/xml" \
     --data @${CHANNEL_NAME}.xml \
-    --user admin:admin | jq '.boolean')
-  if [[ "${RESULT}" == 'true' ]]; then
-    output "deployed successfully"
-  else
-    output "deployed with error"
-  fi
+    --user admin:admin)
+  output "deployment: ${RESULT}"
+#  if [[ "${RESULT}" == 'true' ]]; then
+#    output "deployed successfully"
+#  else
+#    output "deployed with error"
+#  fi
 
   rm ${CHANNEL_NAME}.xml
 }

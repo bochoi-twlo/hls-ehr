@@ -74,8 +74,22 @@ exports.handler = async function(context, event, callback) {
         // execSync(cmd, {env: {'PATH': process.env.PATH + MAC_PATH}, stdio: 'inherit',});
 
         { // deploy mirth channels
-          const fp = Runtime.getAssets()['/ehr/mirth-deploy-channels.sh'].path;
-          execSync(fp, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit'});
+          const client = context.getTwilioClient();
+          let flow_sid = null;
+          await client.studio.flows.list({ limit: 100 }).then((flows) =>
+            flows.forEach((f) => {
+              if (f.friendlyName === 'patient-appointment-management') {
+                flow_sid = f.sid;
+                break;
+              }
+            })
+          );
+          if (flow_sid !== null) {
+            const fp = Runtime.getAssets()['/ehr/mirth-deploy-channels.sh'].path;
+            execSync(fp, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit'});
+          } else {
+            console.log(THIS, 'patient-appointment-management studio flow not found, skipping mirth channel deployment')
+          }
         }
         console.log(THIS, `HLS-EHR deployed successfully`);
       }
