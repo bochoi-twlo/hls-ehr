@@ -23,6 +23,11 @@ RUN curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-c
 RUN chmod +x /usr/local/bin/docker-compose
 RUN ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
+RUN apt install jq -y
+
+RUN apt install python-pip -y
+RUN pip install yq
+
 # install pre-requisites
 RUN twilio plugins:install @twilio-labs/plugin-serverless
 
