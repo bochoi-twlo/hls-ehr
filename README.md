@@ -11,9 +11,9 @@ This document details the requirements for deployment and configuration of HLS E
 
 HLS EHR is deployed using docker compose [docker-compose.yml](https://github.com/bochoi-twlo/hls-ehr/blob/main/docker-compose.yml).
 
+<a name="pre-requisites"/>
 
 ## Pre-requisites
-<a name="pre-requisites"/>
 
 The following prerequisites must be satisfied prior to installing the application.
 
@@ -64,9 +64,9 @@ Follow instruction from ngrok to unzip (FYI, there is internal initiative to get
 Drag the `ngrok` application into your `/Applications` folder
 
 
+<a name="deploy"/>
 
 ## Deploy HLS-EHR
-<a name="deploy"/>
 
 ### Clean-up Previous Installation
 
@@ -104,8 +104,7 @@ docker build --tag hls-ehr-installer .
 Replace `${ACCOUNT_SID}` and `${AUTH_TOKEN}` with that of your target Twilio account.
 
 ```shell
-docker run --name hls-ehr-installer --rm \
---publish 3000:3000  \
+docker run --name hls-ehr-installer --rm --publish 3000:3000  \
 --volume /var/run/docker.sock:/var/run/docker.sock \
 --env ACCOUNT_SID=${ACCOUNT_SID} --env AUTH_TOKEN=${AUTH_TOKEN} \
 --interactive --tty hls-ehr-installer
@@ -121,8 +120,9 @@ Enter Control-C in the terminal to quit the installer
 , or alternatively remove the `hls-ehr-installer` docker container via the Docker Desktop
 
 
-## Using HLS-EHR
 <a name="use"/>
+
+## Using HLS-EHR
 
 
 ##### Open directly
@@ -148,8 +148,9 @@ For windows command go [here](https://stackoverflow.com/questions/3102819/disabl
 ![hls-ehr not running](assets/images/docker-exited.png)
 
 
-# Developer Notes
 <a name="developer"/>
+
+# Developer Notes
 
 ## Initial Setup of HLS-EHR stack
 
