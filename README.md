@@ -106,6 +106,7 @@ Replace `${ACCOUNT_SID}` and `${AUTH_TOKEN}` with that of your target Twilio acc
 ```shell
 docker run --name hls-ehr-installer --rm --publish 3000:3000  \
 --volume /var/run/docker.sock:/var/run/docker.sock \
+--network hls-ehr_default \
 --env ACCOUNT_SID=${ACCOUNT_SID} --env AUTH_TOKEN=${AUTH_TOKEN} \
 --interactive --tty hls-ehr-installer
 ```

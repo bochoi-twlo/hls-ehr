@@ -64,9 +64,9 @@ fi
 #
 # --------------------------------------------------------------------------------
 function deploy_channel {
-  TARGET_HOST=${1}
+  TARGET_URL=${1}
   CHANNEL_NAME=${2}
-  output "deploying channel (${CHANNEL_NAME}) to ${TARGET_HOST}:8443"
+  output "deploying channel (${CHANNEL_NAME}) to ${TARGET_URL}"
 
   # check channel file
   CHANNEL_FILE="mirth/${CHANNEL_NAME}.template.xml"
@@ -82,13 +82,13 @@ function deploy_channel {
   output "CHANNEL_ID=${CHANNEL_ID}"
 
   # check if channel is already deployed
-  DEPLOYED=$(docker exec ${TARGET_HOST} curl --silent --insecure --request GET "https://${TARGET_HOST}:8443/api/channels/${CHANNEL_ID}" --user admin:admin)
+  DEPLOYED=$(curl --silent --insecure --request GET "https://${TARGET_URL}/api/channels/${CHANNEL_ID}" --user admin:admin)
   if [[ -z "${DEPLOYED}" ]]; then
     output "channel not deployed previously, proceeding ..."
   else
     output "channel deployed previously, so deleting ..."
     output "deleting CHANNEL_NAME=${CHANNEL_NAME} ... "
-    docker exec ${TARGET_HOST} curl --silent --insecure --request DELETE "https://${TARGET_HOST}:8443/api/channels/${CHANNEL_ID}" --user admin:admin
+    curl --silent --insecure --request DELETE "https://${TARGET_URL}/api/channels/${CHANNEL_ID}" --user admin:admin
   fi
 
   output "creating deployable channel file: ${CHANNEL_NAME}.xml"
@@ -112,9 +112,10 @@ function deploy_channel {
     exit 1
   fi
 
-  output "deploying ${CHANNEL_NAME}.xml to ${TARGET_HOST}:8443"
-  RESULT=$(docker exec ${TARGET_HOST} curl --silent --insecure --request POST "https://${TARGET_HOST}:8443/api/channels" \
+  output "deploying channel ${CHANNEL_NAME}.xml to ${TARGET_URL}"
+  RESULT=$(curl --silent --insecure --request POST "https://${TARGET_URL}/api/channels" \
     --header "Content-Type: application/xml" \
+    --header "accept: application/json" \
     --data @${CHANNEL_NAME}.xml \
     --user admin:admin)
   output "deployment: ${RESULT}"
@@ -130,23 +131,31 @@ function deploy_channel {
 
 # ---------- main execution ----------------------------------------------------------------------
 
-MIRTH_HOST='mirth_app'
-IE_HOST='openemr_ie'
+# check if inside docker container
+if [ -f /proc/1/cgroup ]; then
+  # inside docker, container MUST be using 'hls-ehr_default' network
+  MIRTH_URL='mirth_app:8443'
+  IE_URL='openemr_ie:8443'
+else
+  # not inside docker
+  MIRTH_URL='127.0.0.1:8443'
+  IE_URL='127.0.0.1:8444'
+fi
 
 # mirth_app is running on docker container port 8443 / host port 8443
-deploy_channel ${MIRTH_HOST} 'appointments-emr2twlo'
+deploy_channel ${MIRTH_URL} 'appointments-emr2twlo'
 
-deploy_channel ${MIRTH_HOST} 'appointments-twlo2emr'
+deploy_channel ${MIRTH_URL} 'appointments-twlo2emr'
 
-docker exec ${MIRTH_HOST} curl --silent --insecure --request POST "https://${MIRTH_HOST}:8443/api/channels/_deploy" --user admin:admin
-output "deployed channels on ${MIRTH_HOST}:8443 ..."
+curl --silent --insecure --request POST "https://${MIRTH_URL}/api/channels/_deploy" --user admin:admin
+output "deployed channels on ${MIRTH_URL} ..."
 
 
 # openemr_ie is running on docker container port 8443 / host port 8444
-deploy_channel ${IE_HOST} 'appointments-outbound'
+deploy_channel ${IE_URL} 'appointments-outbound'
 
-deploy_channel ${IE_HOST} 'appointments-inbound'
+deploy_channel ${IE_URL} 'appointments-inbound'
 
-docker exec ${IE_HOST} curl --silent --insecure --request POST "https://${IE_HOST}:8443/api/channels/_deploy" --user admin:admin
-output "deployed channels on ${IE_HOST}:8443 ..."
+curl --silent --insecure --request POST "https://${IE_URL}/api/channels/_deploy" --user admin:admin
+output "deployed channels on ${IE_URL} ..."
 
