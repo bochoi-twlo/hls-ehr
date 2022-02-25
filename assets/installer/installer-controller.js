@@ -195,16 +195,25 @@ function checkDeployment() {
             $('#ehr-deploy').show();
             $('#ehr-deployed').hide();
             $('#ehr-deploy-button').show();
+            $('#ehr-deploy-button').css('pointer-events', '');
             $('#ehr-remove-button').hide();
             $('#ehr-deploying').hide();
+
+
           } else if (deployable.deploy_state === 'DEPLOYED') {
             $('#ehr-deploy').show();
             $('#ehr-deployed').show();
+            $('#ehr-adjust-date-button').show();
+            $('#ehr-adjust-date-button').css('pointer-events', '');
             $('#ehr-appointment-week').text(`: week of ${deployable.appointment_week}`);
-            $('#ehr-open').attr('href', 'http://localhost:80/interface/login/login.php?site=default');
-            $('#ehr-credentials').text(': use credentials admin/pass');
+            $('#ehr-open-ehr').attr('href', 'http://localhost:80/interface/login/login.php?site=default');
+            $('#ehr-open-mirth').attr('href', 'https://localhost:8443');
+            $('#ehr-open-ie').attr('href', 'https://localhost:8444');
+            $('#ehr-information').text(JSON.stringify(deployable, undefined, 2));
+
             $('#ehr-deploy-button').hide();
             $('#ehr-remove-button').show();
+            $('#ehr-remove-button').css('pointer-events', '');
             $('#ehr-deploying').hide();
           }
         }
@@ -313,7 +322,7 @@ function deployEHR(e) {
   e.preventDefault();
 
   console.log(THIS, 'deploying EHR ...');
-  $('#ehr-deploy-button').prop('disabled', true);
+  $('#ehr-deploy-button').css('pointer-events', 'none');
   $('#ehr-deploying').show();
   fetch('/installer/deploy-ehr', {
     method: 'POST',
@@ -324,14 +333,12 @@ function deployEHR(e) {
     body: JSON.stringify({action: 'CREATE'}),
   })
     .then(() => {
-      $('#ehr-deploying').hide();
-      $('#ehr-deploy-button').prop('disabled', false);
+      console.log(THIS, 'success');
       checkDeployment();
     })
     .catch((err) => {
+      console.log(THIS, err);
       window.alert(err);
-      $('#ehr-deploying').hide();
-      $('#ehr-deploy-button').prop('disabled', false);
       checkDeployment();
     });
 }
@@ -346,7 +353,7 @@ function removeEHR(e) {
   e.preventDefault();
 
   console.log(THIS, 'removing EHR ...');
-  $('#ehr-remove-button').prop('disabled', true);
+  $('#ehr-remove-button').css('pointer-events', 'none');
   $('#ehr-deploying').show();
   fetch('/installer/deploy-ehr', {
     method: 'POST',
@@ -357,15 +364,13 @@ function removeEHR(e) {
     body: JSON.stringify({ action: 'DELETE' }),
   })
     .then(() => {
-      $('#ehr-deploying').hide();
-      $('#ehr-remove-button').prop('disabled', false);
       console.log(THIS, 'success');
       checkDeployment();
     })
     .catch ((err) => {
       console.log(THIS, err);
-      $('#ehr-deploying').hide();
-      $('#ehr-remove-button').prop('disabled', false);
+      window.alert(err);
+      checkDeployment();
     });
 }
 
@@ -378,10 +383,10 @@ function adjustEHRDate(e) {
 
   e.preventDefault();
 
-  console.log(THIS, 'adjusting...');
-  $('#ehr-adjust-date-button').prop('disabled', true);
+  console.log(THIS, 'adjusting appointment dates to this week ...');
+  $('#ehr-adjust-date-button').css('pointer-events', 'none');
   $('#ehr-deploying').show();
-  fetch('/installer/adjust-appointment-dates', {
+  fetch('/installer/configure-ehr?action=ADJUST_APPOINTMENT_DATES', {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -390,15 +395,13 @@ function adjustEHRDate(e) {
     body: JSON.stringify({}),
   })
     .then(() => {
-      $('#ehr-deploying').hide();
-      $('#ehr-adjust-date-button').prop('disabled', false);
       console.log(THIS, 'success');
       checkDeployment();
     })
     .catch ((err) => {
       console.log(THIS, err);
-      $('#ehr-deploying').hide();
-      $('#ehr-adjust-date-button').prop('disabled', false);
+      window.alert(err);
+      checkDeployment();
     });
 }
 

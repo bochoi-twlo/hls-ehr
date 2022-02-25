@@ -6,9 +6,9 @@ function output {
 }
 
 # --------------------------------------------------------------------------------
-# script to install hls-ehr docker-compose stack
+# script to install hls-ehr docker compose stack
 # --------------------------------------------------------------------------------
-output 'uninstalling hls-ehr docker-compose stack'
+output 'uninstalling hls-ehr docker compose stack'
 
 # --------------------------------------------------------------------------------
 output 'looking for existing installation ...'

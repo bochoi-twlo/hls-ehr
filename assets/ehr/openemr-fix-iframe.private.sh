@@ -10,9 +10,9 @@ function output {
 # --------------------------------------------------------------------------------
 # check hls-ehr
 if [ "$(docker ps --all | grep openemr_app)" ]; then
-  output 'found hls-ehr docker-compose stack. proceeding ...'
+  output 'found hls-ehr docker compose stack. proceeding ...'
 else
-  output 'no hls-ehr docker-compose stack!!! exiting ...'
+  output 'no hls-ehr docker compose stack!!! exiting ...'
   exit 1
 fi
 
@@ -25,8 +25,10 @@ else
   docker start openemr_app
 
   docker exec -i openemr_app /bin/sh < openemr/script_iframe_fix.sh
-
-  docker stop openemr_app
 fi
+
+docker stop openemr_app
+
+docker start openemr_app
 
 output 'complete'

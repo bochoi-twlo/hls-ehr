@@ -1,4 +1,15 @@
-
+/*
+ * ################################################################################
+ * trigger to fire when patients are updated
+ *
+ * Note that this trigger MUST be temporarily disabled (dropped) during mass patient changes
+ *
+ * only patients updates meeting following criteria will fire (see detailed in sql condition below):
+ * . appointment has provider
+ * . appointment has facility/location
+ * . change for patient hipaa_allowsms
+ * ################################################################################
+ */
 
 drop trigger if exists openemr.patient_update;
 

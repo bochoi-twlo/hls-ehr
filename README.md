@@ -1,12 +1,19 @@
 # HLS EMR 
 
-This section details the requirements for deployment and configuration of HLS EHR.
+##### Table of Contents
+- [Pre-requisites](#pre-requisites)
+- [Deploy HLS-EHR](#deploy)
+- [Using HLS-EHR](#use)
+- [Developer Notes](#developer)
+
+
+This document details the requirements for deployment and configuration of HLS EHR.
 
 HLS EHR is deployed using docker compose [docker-compose.yml](https://github.com/bochoi-twlo/hls-ehr/blob/main/docker-compose.yml).
 
 
-
-## Prerequisites
+## Pre-requisites
+<a name="pre-requisites"/>
 
 The following prerequisites must be satisfied prior to installing the application.
 
@@ -59,6 +66,7 @@ Drag the `ngrok` application into your `/Applications` folder
 
 
 ## Deploy HLS-EHR
+<a name="deploy"/>
 
 ### Clean-up Previous Installation
 
@@ -112,7 +120,10 @@ Open http://localhost:3000/installer/index.html.
 Enter Control-C in the terminal to quit the installer
 , or alternatively remove the `hls-ehr-installer` docker container via the Docker Desktop
 
-#### Accessing OpenEMR
+
+## Using HLS-EHR
+<a name="use"/>
+
 
 ##### Open directly
 
@@ -134,7 +145,48 @@ open -na Google\ Chrome --args --user-data-dir=/tmp/temporary-chrome-profile-dir
 ```
 For windows command go [here](https://stackoverflow.com/questions/3102819/disable-same-origin-policy-in-chrome)
 
+![hls-ehr not running](assets/images/docker-exited.png)
 
+
+# Developer Notes
+<a name="developer"/>
+
+## Initial Setup of HLS-EHR stack
+
+### OpenEMR
+
+After deployment of docker compose stack, cd to `assets/ehr/openemr` directory and execute the following:
+
+- `mirth.appointment_events` table for interface engine
+    ```shell
+    docker exec --interactive openemr_db mysql --user=root --password=root openemr < create_appointment_events_table.sql
+    ```
+
+- appointment insert & update trigger
+    ```shell
+    docker exec --interactive openemr_db mysql --user=root --password=root openemr < create_appointment_insert_trigger.sql
+    ```
+    ```shell
+    docker exec --interactive openemr_db mysql --user=root --password=root openemr < create_appointment_update_trigger.sql
+    ```
+
+- patient update trigger
+    ```shell
+    docker exec --interactive openemr_db mysql --user=root --password=root openemr < create_patient_update_trigger.sql
+    ```
+
+When patient & appointment data is created/updated in openEMR as part of seed demo data
+, the triggers must be disabled first and re-enabled afterwards to suppress firing.
+
+To disable triggers, temporarily drop them and re-create them.
+```shell
+openemr $ docker exec -i openemr_db mysql --user=root --password=root openemr < drop_all_triggers.sql
+```
+
+### OpenEMR IE (Mirth Interface Engine)
+
+
+### Mirth
 
 
 # Archive, ignore

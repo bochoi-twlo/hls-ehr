@@ -1,3 +1,21 @@
+/*
+ * ################################################################################
+ * trigger to fire when appointments are updated
+ *
+ * Note that this trigger MUST be temporarily disabled (dropped) during mass appointment changes
+ *
+ * only appointments meeting following criteria will fire (see detailed in sql condition below):
+ * . appointment has provider
+ * . appointment has facility/location
+ * . appoontment has patient /w hipaa_allowsms = 'YES' and p.hipaa_voice = 'YES'
+ * . appointment change for attributes below ONLY  (see detailed in sql condition below)
+ *   . pc_appstatus
+ *   . pc_eventDate
+ *   . pc_startTime
+ *   . pc_facility (location)
+ *   . pc_aid (provider)
+ * ################################################################################
+ */
 
 drop trigger if exists openemr.appointment_update;
 
