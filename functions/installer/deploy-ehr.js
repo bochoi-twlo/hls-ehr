@@ -80,7 +80,6 @@ exports.handler = async function(context, event, callback) {
             flows.forEach((f) => {
               if (f.friendlyName === 'patient-appointment-management') {
                 flow_sid = f.sid;
-                break;
               }
             })
           );
