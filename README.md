@@ -88,7 +88,7 @@ Also, ensure that you do not have any running processes that is listening on por
 
 Directly from github repository:
 ```shell
-docker build --tag hls-ehr-installer https://github.com/bochoi-twlo/hls-ehr.git#main
+docker build --tag hls-ehr-installer --no-cache https://github.com/bochoi-twlo/hls-ehr.git#main
 ```
 
 For machines running Apple M1 chip add the option `--platform linux/amd64`.

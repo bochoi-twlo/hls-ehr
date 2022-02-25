@@ -66,8 +66,7 @@ fi
 function deploy_channel {
   TARGET_HOST=${1}
   CHANNEL_NAME=${2}
-  output "deploying channel to ${TARGET_HOST}:8443"
-  output "CHANNEL_NAME=${CHANNEL_NAME}"
+  output "deploying channel (${CHANNEL_NAME}) to ${TARGET_HOST}:8443"
 
   # check channel file
   CHANNEL_FILE="mirth/${CHANNEL_NAME}.template.xml"
