@@ -1,3 +1,13 @@
+/*
+ * ################################################################################
+ * trigger to fire when appointments are created
+ *
+ * only appointments meeting following criteria will fire (see detailed in sql condition below):
+ * . appointment has provider
+ * . appointment has facility/location
+ * . appoontment has patient /w hipaa_allowsms = 'YES' and p.hipaa_voice = 'YES'
+ * ################################################################################
+ */
 
 drop trigger if exists openemr.appointment_insert;
 

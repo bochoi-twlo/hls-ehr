@@ -1,13 +1,15 @@
--- ################################################################################
--- mirth companion schema/tables
---
--- mirth.appointment_event will collect EMR appointment events for outbound IE
--- channel to pick up.
---
--- event_flow: SEND for outbound to Twilio, RECEIVE for inbound from Twilio. RECEIVE not used currently
--- event_status: transitions from QUEUED -> PROCESSED if successful, ERRORED otherwise
--- event_type: valid outbound appointment event initiated from EMR
--- ################################################################################
+/*
+ * ################################################################################
+ * mirth companion schema/tables
+ *
+ * mirth.appointment_event will collect EMR appointment events for outbound IE
+ * channel to pick up.
+ *
+ * event_flow: SEND for outbound to Twilio, RECEIVE for inbound from Twilio. RECEIVE not used currently
+ * event_status: transitions from QUEUED -> PROCESSED if successful, ERRORED otherwise
+ * event_type: valid outbound appointment event initiated from EMR
+ * ################################################################################
+ */
 
 create schema if not exists mirth;
 

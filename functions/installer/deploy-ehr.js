@@ -20,9 +20,26 @@ exports.handler = async function(context, event, callback) {
   assert(context.DOMAIN_NAME.startsWith('localhost:'), `Can only run on localhost!!!`);
   console.time(THIS);
   try {
+    // when installer is run locally (and not via Docker),
+    // using 'docker-compose' command on Mac, execSync does not work properly over sym links
+    // and requires a PATH to the executable for docker-compose v1 directly
+    // there, the following MAC_PATH needs to added to the PATH environment for execSync
+    const MAC_PATH=':/Applications/Docker.app/Contents/Resources/bin/docker-compose-v1:/Applications/Docker.app/Contents/Resources/bin';
+    assert (process.env.PATH, 'Must start twilio serverless:start with --load-local-env option!!!');
+    console.log(THIS, `path = ${process.env.PATH + MAC_PATH}`);
+
     const action = event.action ? event.action : 'CREATE';
 
     switch (action) {
+
+      case 'DELETE': {
+        const deployed = execSync("docker ps --all | grep openemr_app | wc -l");
+        if (deployed.toString().trim() != '1') throw new Error('HLS-EHR not deployed!!!');
+
+        const fp = Runtime.getAssets()['/ehr/ehr-uninstall.sh'].path;
+        execSync(fp, { env: {'PATH': process.env.PATH + MAC_PATH}, shell: '/bin/bash', stdio: 'inherit',});
+      }
+        break;
 
       case 'CREATE': {
 
@@ -33,41 +50,34 @@ exports.handler = async function(context, event, callback) {
         const environmentVariables = event.configuration;
         console.log(THIS, 'configuration:', environmentVariables);
 
-        {
-          // create docker-compose stack
+        { // create docker-compose stack
           const fp = Runtime.getAssets()['/ehr/ehr-install.sh'].path;
-          execSync(fp, {shell: '/bin/bash', stdio: 'inherit'});
+          execSync(fp, { shell: '/bin/bash', env: {'PATH': process.env.PATH + MAC_PATH}, stdio: 'inherit',});
         }
 
-        {
-          const cmd = 'docker-compose --project-name hls-ehr stop';
-          execSync(cmd, {stdio: 'inherit'});
-        }
-
-        {        // apply iframe fix
+        { // apply iframe fix
           const fp = Runtime.getAssets()['/ehr/openemr-fix-iframe.sh'].path;
-          execSync(fp, {cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit'});
+          execSync(fp, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit',});
         }
 
-        {        // restore docker volumes
+        { // restore docker volumes
           const fp = Runtime.getAssets()['/ehr/openemr-restore-volumes.sh'].path;
-          execSync(fp, {cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit'});
+          execSync(`${fp} himss`, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit',});
         }
 
-        {
-          const cmd = 'docker-compose --project-name hls-ehr start';
-          execSync(cmd, {stdio: 'inherit'});
+        { // adjust appointment dates to current week
+          const fp = Runtime.getAssets()['/ehr/openemr-adjust-appointment-dates.sh'].path;
+          execSync(fp, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit'});
+        }
+
+        // const cmd = 'docker-compose --project-name hls-ehr stop';
+        // execSync(cmd, {env: {'PATH': process.env.PATH + MAC_PATH}, stdio: 'inherit',});
+
+        { // deploy mirth channels
+          const fp = Runtime.getAssets()['/ehr/mirth-deploy-channels.sh'].path;
+          execSync(fp, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit'});
         }
         console.log(THIS, `HLS-EHR deployed successfully`);
-      }
-      break;
-
-      case 'DELETE': {
-        const deployed = execSync("docker ps --all | grep openemr_app | wc -l");
-        if (deployed.toString().trim() != '1') throw new Error('HLS-EHR not deployed!!!');
-
-        const fp = Runtime.getAssets()['/ehr/ehr-uninstall.sh'].path;
-        execSync(fp, { shell: '/bin/bash', stdio: 'inherit' });
       }
       break;
 

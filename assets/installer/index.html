@@ -102,16 +102,23 @@
       </div>
 
       <div class="form-group">
+        <hr>
         <div id="ehr-deploy" style="display: none;" class="deployer">
           <div id="ehr-deployed" style="display: none;" class="deployer">
             <h4><span class="checkmark">&#10003;</span> EHR is deployed</h4>
             <a id="ehr-adjust-date-button" class="button" onclick="adjustEHRDate(event);">Adjust Appointment Dates</a>
             <span id="ehr-appointment-week"></span>
-            <a id="ehr-open" class="button button-outline" href="" target="_blank">Open EHR</a>
+            <span>
+              <a id="ehr-open-ehr"   class="button button-outline" href="" target="_blank">Open EHR</a> (admin/pass)
+              <a id="ehr-open-mirth" class="button button-outline" href="" target="_blank">Open Mirth</a> (admin/admin)
+              <a id="ehr-open-ie"    class="button button-outline" href="" target="_blank">Open IE</a> (admin/admin)
+            </span>
             <span id="ehr-credentials"></span>
+            <br>
+            <pre id="ehr-information" style="font-size: small"></pre>
           </div>
-          <a id="ehr-deploy-button" class="button" onclick="deployEHR(event);">Deploy EHR Locally</a>
-          <a id="ehr-remove-button" class="button" onclick="removeEHR(event);">Remove EHR Locally</a>
+          <a id="ehr-deploy-button" class="button" onclick="deployEHR(event);">Deploy EHR to Localhost</a>
+          <a id="ehr-remove-button" class="button" onclick="removeEHR(event);">Remove EHR on Localhost</a>
           <div id="ehr-deploying" style="display: none;" class="deployer">
             <div class="lds-ellipsis">
               <div></div>
