@@ -26,7 +26,7 @@ output 'initializing docker compose stack'
 docker-compose --project-name 'hls-ehr' start
 
 output 'waiting for openemr_app to start up ...'
-while [ ! "$(docker exec openemr_app curl --silent --head 'http://localhost:80/interface/login/login.php?site=default')" ]; do
+while [ ! "$(docker exec openemr_app curl --silent --head 'http://openemr_app:80/interface/login/login.php?site=default')" ]; do
   sleep 2
   echo -n '.'
 done
