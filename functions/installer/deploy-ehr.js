@@ -47,12 +47,15 @@ exports.handler = async function(context, event, callback) {
         if (deployed.toString().trim() === '1') throw new Error('HLS-EHR already deployed!!!');
 
         console.log(THIS, `deploying HLS-EHR ... `);
+
         const environmentVariables = event.configuration;
         console.log(THIS, 'configuration:', environmentVariables);
 
         { // create docker-compose stack
           const fp = Runtime.getAssets()['/ehr/ehr-install.sh'].path;
           execSync(fp, { shell: '/bin/bash', env: {'PATH': process.env.PATH + MAC_PATH}, stdio: 'inherit',});
+
+          execSync("docker network connect hls-ehr_default hls-ehr-installer");
         }
 
         { // apply iframe fix
