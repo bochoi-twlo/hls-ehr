@@ -18,6 +18,9 @@ else
   output 'no existing installation. proceeding ...'
 fi
 
+output 'pruning orphaned volumes'
+docker volume prune --force
+
 output 'installing docker compose stack'
 docker-compose --project-name 'hls-ehr' up --no-start
 
