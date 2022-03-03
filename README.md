@@ -70,19 +70,25 @@ Drag the `ngrok` application into your `/Applications` folder
 
 ### Clean-up Previous Installation
 
-Installer can remove, existing installation of `hls-ehr`.
+Installer can remove, existing installation of docker compose stack named `hls-ehr`.
+However, if you have previous installed openEMR using a different docker compose stack
+, please remove the running docker container and image via the Docker Desktop or via command line
 
-However, if you have previous installed openEMR, please remove the running docker container and image via the Docker Desktop.
+```shell
+docker-compose --project-name your-openemr-stack-name down
+```
 
 After container and image removal, unsued volumes need to be removed via
 ```shell
 docker volume prune --force
 ```
 
-Also, ensure that you do not have any running processes that is listening on port 3000 such development servers.
-
-
 ### Deploy HLS-EHR Docker Compose
+
+Please ensure that you do not have any running processes that is listening on port 3000
+such development servers or another HLS docker installer still running.
+
+<a name="build">
 
 #### Build Installer Docker Image
 
@@ -92,12 +98,13 @@ docker build --tag hls-ehr-installer --no-cache https://github.com/bochoi-twlo/h
 ```
 
 For machines running Apple M1 chip add the option `--platform linux/amd64`.
-To build fresh image add the option `--no-cache`.
 
 Alternatively, if you have git repo cloned locally
 ```shell
-docker build --tag hls-ehr-installer .
+docker build --tag hls-ehr-installer --no-cache .
 ```
+
+<a name="build">
 
 #### Run Installer Docker Container
 
