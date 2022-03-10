@@ -6,7 +6,8 @@ const variableInput = [];
 // -----------------------------------------------------------------------------
 $(document).ready(async function () {
     await populate();
-    checkDeployment();
+    console.log('populated');
+    await checkDeployment();
 });
 
 

@@ -88,7 +88,16 @@ exports.handler = async function(context, event, callback) {
           );
           if (flow_sid !== null) {
             const fp = Runtime.getAssets()['/ehr/mirth-deploy-channels.sh'].path;
-            execSync(fp, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit'});
+            execSync(fp, {
+              cwd: path.dirname(fp),
+              shell: '/bin/bash',
+              env: {
+                'PATH': process.env.path,
+                'TWILIO_ACCOUNT_SID': context.ACCOUNT_SID,
+                'TWILIO_AUTH_TOKEN': context.AUTH_TOKEN
+              },
+              stdio: 'inherit',
+            });
           } else {
             console.log(THIS, 'patient-appointment-management studio flow not found, skipping mirth channel deployment')
           }

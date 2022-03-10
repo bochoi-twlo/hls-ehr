@@ -51,7 +51,7 @@
         <queueBufferSize>1000</queueBufferSize>
       </sourceConnectorProperties>
       <driver>com.mysql.cj.jdbc.Driver</driver>
-      <url>jdbc:mysql://openemrdb:3306/mirth</url>
+      <url>jdbc:mysql://openemr_db:3306/mirth</url>
       <username>root</username>
       <password>root</password>
       <select>select
