@@ -30,18 +30,18 @@ else
 fi
 
 # check twilio credentials
-if [[ -z ${ACCOUNT_SID} ]]; then
-  output 'ACCOUNT_SID environment variable unset!!!'
+if [[ -z ${TWILIO_ACCOUNT_SID} ]]; then
+  output 'TWILIO_ACCOUNT_SID environment variable unset!!!'
   exit 1
 fi
 
-if [[ -z ${AUTH_TOKEN} ]]; then
-  output 'AUTH_TOKEN environment variable unset!!!'
+if [[ -z ${TWILIO_AUTH_TOKEN} ]]; then
+  output 'TWILIO_AUTH_TOKEN environment variable unset!!!'
   exit 1
 fi
 
 # check deployed PAM
-FLOW_SID=$(curl https://studio.twilio.com/v2/Flows --silent --user ${ACCOUNT_SID}:${AUTH_TOKEN} \
+FLOW_SID=$(curl https://studio.twilio.com/v2/Flows --silent --user ${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN} \
   | jq --raw-output '.flows[] | select(.friendly_name | contains("'patient-appointment-management'")) | .sid')
 if [[ -z ${FLOW_SID} ]]; then
   output "sid not found for flows[].friendly_name=patient-appointment-management!!!"
@@ -51,7 +51,7 @@ else
 fi
 
 FLOW_PHONE_NUMBER=$(curl https://preview.twilio.com/Numbers/ActiveNumbers \
-  --silent --user ${ACCOUNT_SID}:${AUTH_TOKEN} \
+  --silent --user ${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN} \
   | jq --raw-output '.items[] | select(.configurations.sms.url | contains("'${FLOW_SID}'")) | .phone_number')
 if [[ -z ${FLOW_PHONE_NUMBER} ]]; then
   output "phone_number not found for flow_sid=${FLOW_SID}!!!"
@@ -95,8 +95,8 @@ function deploy_channel {
   if [[ "${CHANNEL_NAME}" != 'appointments-emr2twlo' ]]; then
     cat ${CHANNEL_FILE} > ${CHANNEL_NAME}.xml
   else
-    output "replace YOUR_TWILIO_ACCOUNT_SID with ${ACCOUNT_SID}"
-    output "replace YOUR_TWILIO_AUTH_TOKEN with ${AUTH_TOKEN}"
+    output "replace YOUR_TWILIO_ACCOUNT_SID with ${TWILIO_ACCOUNT_SID}"
+    output "replace YOUR_TWILIO_AUTH_TOKEN with ${TWILIO_AUTH_TOKEN}"
     output "replace YOUR_FLOW_SID with ${FLOW_SID}"
     output "replace YOUR_FLOW_PHONE_NUMBER with ${FLOW_PHONE_NUMBER}"
 
