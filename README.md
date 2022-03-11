@@ -77,9 +77,9 @@ and get yourself invited from hls team mebmer to assign a static ngrok url for y
 
 Once you are registered, you can sign into https://dashboard.ngrok.com/team/members
 
-To start ngrok using your static ngrok URL on local port 80
+To start ngrok using your static ngrok URL on local port 8661 (for mirth)
 ```shell
-ngrok http --region=us --hostname=bochoi.ngrok.io 80
+ngrok http --region=us --hostname=bochoi.ngrok.io 8661
 ```
 
 
