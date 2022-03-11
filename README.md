@@ -262,9 +262,11 @@ cd "/Applications/Mirth Connect Administrator Launcher.app/Contents/MacOS"
 ```
 
 - Launcher initial window will display
+  ![mca-launcher](assets/images/mca-launcher.png)
 
 - If registration window comes up, just close it (error)
 - Click 'Launch' button on the upper right and enter the same credentials used to log into dashboard at the login window
+  ![mca-launcher](assets/images/mca-login.png)
 - Verify the 'Address' that you are connecting to the correct Interface Engine
     - 8443 for the integrator mirth
     - 8444 for the openemr IE mirth
