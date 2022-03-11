@@ -64,7 +64,14 @@ If you will demo a blue print that will need to connect back to your macbook fro
 brew install ngrok/ngrok/ngrok
 ```
 
-If you have twilio email, register at `ngrok.com` using your twilio email
+If you have twilio email, register at `ngrok.com` using your twilio email.
+Login to `ngrok.com` and follow step 2. to connect your `ngrok` on your laptop to your account.
+
+```shell
+ngrok authtoken your-ngrok-auth-token
+```
+
+
 and get yourself invited from hls team mebmer to assign a static ngrok url for yourself
 (e.g., `bochoi.ngrok.io`).
 
@@ -82,7 +89,7 @@ ngrok http --region=us --hostname=bochoi.ngrok.io 80
 
 ---
 
-### Clean-up Previous Installation
+### Clean-up Previous Installation (Optional)
 
 Installer can remove, existing installation of docker compose stack named `hls-ehr`.
 However, if you have previous installed openEMR using a different docker compose stack
@@ -96,6 +103,19 @@ After container and image removal, unsued volumes need to be removed via
 ```shell
 docker volume prune --force
 ```
+
+<a name="pam"/>
+
+### Patient-Appointment-Management Integration (Optional)
+
+In order to integrate with patient-appointment-management integration
+, you **must** have `patient-appointment-managment` blueprint deployed in your target twilio account
+so that the HLS-EHR installer can detect it.
+
+After HLS-EHR installation, integration will work immediately.
+
+Remember that after HLS-EHR installation, `ngrok` will need to running in order to receive 2-way SMS.
+
 
 <a name="build" />
 
@@ -181,6 +201,8 @@ For windows command go [here](https://stackoverflow.com/questions/3102819/disabl
 ---
 
 ## Mirth Connect Administrator
+
+Mirth Connect Administrator is used for managing/monitoring EHR integration.
 
 ### Installing MCA
 
