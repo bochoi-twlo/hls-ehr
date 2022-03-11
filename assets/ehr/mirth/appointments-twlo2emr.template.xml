@@ -172,7 +172,7 @@ tmp['PID']['PID.3']['PID.3.1'] = msg['patient_id'];</script>
           <maxRetries>2</maxRetries>
         </transmissionModeProperties>
         <serverMode>false</serverMode>
-        <remoteAddress>emrhl7</remoteAddress>
+        <remoteAddress>openemr_ie</remoteAddress>
         <remotePort>6661</remotePort>
         <overrideLocalBinding>false</overrideLocalBinding>
         <localAddress>0.0.0.0</localAddress>

@@ -227,7 +227,7 @@ tmp['AIL']['AIL.3']['AIL.3.4'] = msg['ail3_4'].toString();</script>
           <maxRetries>2</maxRetries>
         </transmissionModeProperties>
         <serverMode>false</serverMode>
-        <remoteAddress>mirth</remoteAddress>
+        <remoteAddress>mirth_app</remoteAddress>
         <remotePort>6661</remotePort>
         <overrideLocalBinding>false</overrideLocalBinding>
         <localAddress>0.0.0.0</localAddress>

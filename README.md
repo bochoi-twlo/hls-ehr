@@ -11,9 +11,12 @@ This document details the requirements for deployment and configuration of HLS E
 
 HLS EHR is deployed using docker compose [docker-compose.yml](https://github.com/bochoi-twlo/hls-ehr/blob/main/docker-compose.yml).
 
+
 <a name="pre-requisites"/>
 
 ## Pre-requisites
+
+---
 
 The following prerequisites must be satisfied prior to installing the application.
 
@@ -57,16 +60,27 @@ yq 2.13.0
 
 If you will demo a blue print that will need to connect back to your macbook from the internet (e.g., "patient appointment management"), you need to install a reverse proxy.
 
-Download ngrok from `https://ngrok.com/download`
+```shell
+brew install ngrok/ngrok/ngrok
+```
 
-Follow instruction from ngrok to unzip (FYI, there is internal initiative to get enterprise license for ngrok that will assign static URL, will update this when it is place)
+If you have twilio email, register at `ngrok.com` using your twilio email
+and get yourself invited from hls team mebmer to assign a static ngrok url for yourself
+(e.g., `bochoi.ngrok.io`).
 
-Drag the `ngrok` application into your `/Applications` folder
+Once you are registered, you can sign into https://dashboard.ngrok.com/team/members
+
+To start ngrok using your static ngrok URL on local port 80
+```shell
+ngrok http --region=us --hostname=bochoi.ngrok.io 80
+```
 
 
 <a name="deploy"/>
 
 ## Deploy HLS-EHR
+
+---
 
 ### Clean-up Previous Installation
 
@@ -83,16 +97,10 @@ After container and image removal, unsued volumes need to be removed via
 docker volume prune --force
 ```
 
-### Deploy HLS-EHR Docker Compose
+<a name="build" />
 
-Please ensure that you do not have any running processes that is listening on port 3000
-such development servers or another HLS docker installer still running.
+### Build Installer Docker Image
 
-<a name="build">
-
-#### Build Installer Docker Image
-
-Directly from github repository:
 ```shell
 docker build --tag hls-ehr-installer --no-cache https://github.com/bochoi-twlo/hls-ehr.git#main
 ```
@@ -104,35 +112,48 @@ Alternatively, if you have git repo cloned locally
 docker build --tag hls-ehr-installer --no-cache .
 ```
 
-<a name="build">
+<a name="run" />
 
-#### Run Installer Docker Container
+### Run Installer Docker Container
 
-Replace `${ACCOUNT_SID}` and `${AUTH_TOKEN}` with that of your target Twilio account.
+Please ensure that you do not have any running processes that is listening on port 3000
+such development servers or another HLS docker installer still running.
+
+Replace `${TWILIO_ACCOUNT_SID}` and `${TWILIO_AUTH_TOKEN}` with that of your target Twilio account.
+Alternatively, have environment variable set in your terminal.
 
 ```shell
 docker run --name hls-ehr-installer --rm --publish 3000:3000  \
 --volume /var/run/docker.sock:/var/run/docker.sock \
---env ACCOUNT_SID=${ACCOUNT_SID} --env AUTH_TOKEN=${AUTH_TOKEN} \
+--env ACCOUNT_SID=${TWILIO_ACCOUNT_SID} --env AUTH_TOKEN=${TWILIO_AUTH_TOKEN} \
 --interactive --tty hls-ehr-installer
 ```
 
 For machines running Apple M1 chip add the option `--platform linux/amd64`.
 
-#### Open installer in browser
+Monitor the output of the terminal and wait upto a minute for installer to startup.
 
 Open http://localhost:3000/installer/index.html.
 
-Enter Control-C in the terminal to quit the installer
+### Install
+
+Follow instruction in the installer while keeping terminal window visible to monitor long processes running.
+
+### Stop Installer
+
+Once installation is complete, you can enter Control-C in the terminal to quit the installer
 , or alternatively remove the `hls-ehr-installer` docker container via the Docker Desktop
+
+Note that it may take a minute for installer docker container stopped properly and disappear.
 
 
 <a name="use"/>
 
 ## Using HLS-EHR
 
+---
 
-##### Open directly
+### Open directly
 
 Either click the link `Open EHR` in the installer
 that will open http://localhost:80/interface/login/login.php?site=default
@@ -142,7 +163,7 @@ Note that if you had previously access openEMR
 , some client javascript file may be cached in your browser.
 Please clear you cached files.
 
-##### Open inside Twilio Flex Agent Desktop
+## Open inside Twilio Flex Agent Desktop
 
 OpenEMR can be embedded in the Twilio Flex agent desktop via `iframe`.
 
@@ -152,12 +173,89 @@ open -na Google\ Chrome --args --user-data-dir=/tmp/temporary-chrome-profile-dir
 ```
 For windows command go [here](https://stackoverflow.com/questions/3102819/disable-same-origin-policy-in-chrome)
 
-![hls-ehr not running](assets/images/docker-exited.png)
-
 
 <a name="developer"/>
 
 # Developer Notes
+
+---
+
+## Mirth Connect Administrator
+
+### Installing MCA
+
+- Download MCA installable (mirth-administrator-launcher-1.1.0-macos.dmg)
+  - Log into HLS AWS account (757418860937)
+  - Download s3://twlo-hls-artifacts/installables/mirth-administrator-launcher-1.1.0-macos.dmg to your 'Downloads' folder
+- Open the dmg. **Note that simply opening the dmg will NOT install properly!!!**
+- Drag out the 'Mirth Connect Administrator Launcher Installer' to local directory (~/Desktop). This will 'mount' the install app.
+- Execute the following commands to install:
+  -  Reference: https://forums.mirthproject.io/forum/mirth-connect/support/174768-mirth-connect-administrator-launcher-1-1-0-macosx
+```shell
+bochoi % sudo su -          # this will change your identity to 'root'
+Password:                   # enter your Mac password
+ 
+root % mount                # confirm that MCAL (Mirth Connect Administrator Launcher) is mounted (e.g., /dev/disk4 below)
+/dev/disk3s1s1 on / (apfs, sealed, local, read-only, journaled)
+devfs on /dev (devfs, local, nobrowse)
+/dev/disk3s6 on /System/Volumes/VM (apfs, local, noexec, journaled, noatime, nobrowse)
+/dev/disk3s2 on /System/Volumes/Preboot (apfs, local, journaled, nobrowse)
+/dev/disk3s4 on /System/Volumes/Update (apfs, local, journaled, nobrowse)
+/dev/disk1s2 on /System/Volumes/xarts (apfs, local, noexec, journaled, noatime, nobrowse)
+/dev/disk1s1 on /System/Volumes/iSCPreboot (apfs, local, journaled, nobrowse)
+/dev/disk1s3 on /System/Volumes/Hardware (apfs, local, journaled, nobrowse)
+/dev/disk3s5 on /System/Volumes/Data (apfs, local, journaled, nobrowse, protect)
+map auto_home on /System/Volumes/Data/home (autofs, automounted, nobrowse)
+/dev/disk4 on /Volumes/Mirth Connect Administrator Launcher (hfs, local, nodev, nosuid, read-only, noowners, quarantine, mounted by bochoi)
+ 
+root % cd "/Volumes/Mirth Connect Administrator Launcher"
+ 
+root % ./Mirth\ Connect\ Administrator\ Launcher\ Installer.app/Contents/MacOS/JavaApplicationStub -c
+This will install Mirth Connect Administrator Launcher on your computer.
+OK [o, Enter], Cancel [c]
+...
+... you'll have to [Enter] many times
+...
+Run Mirth Connect Administrator Launcher?
+Yes [y, Enter], No [n]
+n
+Finishing installation ...
+ 
+root % exit                 # this will return your identity yourself
+ 
+bochoi %
+```
+
+- You should see 'Mirth Connect Administrator Launcher' in your /Applications folder as below
+  ![mca](assets/images/mca-in-app-folder.png)
+
+
+### Launching MCA
+
+- MCA must be launched via command line as superuser. **Your MUST keep this terminal window running after MCA starts!**
+```shell
+sudo su
+cd "/Applications/Mirth Connect Administrator Launcher.app/Contents/MacOS"
+./JavaApplicationStub
+```
+
+- Launcher initial window will display
+
+- If registration window comes up, just close it (error)
+- Click 'Launch' button on the upper right and enter the same credentials used to log into dashboard at the login window
+- Verify the 'Address' that you are connecting to the correct Interface Engine
+    - 8443 for the integrator mirth
+    - 8444 for the openemr IE mirth
+
+- MCA main window will display
+
+
+
+
+
+
+
+
 
 ## Initial Setup of HLS-EHR stack
 
