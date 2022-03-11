@@ -2,5 +2,5 @@
 "event_type": "CONFIRM",
 "event_datetime_utc": "2021-05-04T19:41:19Z",
 "patient_id": "1000",
-"appointment_id": "2000",
+"appointment_id": "2000"
 }
