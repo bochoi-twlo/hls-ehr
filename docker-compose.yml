@@ -53,7 +53,7 @@ services:
   openemr_ie:
     container_name: openemr_ie
     restart: always
-    image: nextgenhealthcare/connect:3.10.1
+    image: nextgenhealthcare/connect:3.10.1-jdk
     volumes:
       - v_openemr_ie_app:/opt/connect/appdata
     environment:
@@ -88,7 +88,7 @@ services:
   mirth_app:
     container_name: mirth_app
     restart: always
-    image: nextgenhealthcare/connect:3.10.1
+    image: nextgenhealthcare/connect:3.10.1-jdk
     volumes:
       - v_mirth_app:/opt/connect/appdata
     environment:
