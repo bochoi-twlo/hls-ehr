@@ -49,20 +49,6 @@ while [ ! "$(docker exec openemr_ie curl --silent --insecure --head https://open
 done
 echo ' up'
 
-output 'waiting for mirth_app API to start up ...'
-while [ ! "$(docker exec mirth_app curl --silent --insecure --head https://mirth_app:8443/api/)" ]; do
-  sleep 2
-  echo -n '.'
-done
-echo ' up'
-
-output 'waiting for openemr_ie API to start up ...'
-while [ ! "$(docker exec openemr_ie curl --silent --insecure --head https://openemr_ie:8443/api)" ]; do
-  sleep 2
-  echo -n '.'
-done
-echo ' up'
-
 
 output 'installation of hls-ehr complete!'
 

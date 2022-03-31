@@ -42,11 +42,63 @@ targets:
 	@grep '^[A-Za-z0-9\-]*:' Makefile | cut -d ':' -f 1 | sort
 
 
+check-prerequisites:
+	$(eval DOCKER := $(shell which docker))
+	@if [[ -z "$(DOCKER)" ]]; then \
+	  echo prerequisite: missing docker, please install docker desktop !!!; \
+	else \
+	  echo "prerequisite: " `docker --version`; \
+	fi
+	@[[ ! -z "$(DOCKER)" ]]
+
+	$(eval TWILIOCLI := $(shell which twilio))
+	@if [[ -z "$(TWILIOCLI)" ]]; then \
+	  echo prerequisite: missing twilio cli, please install via 'brew tap twilio/brew && brew install twilio'!!!; \
+	else \
+	  echo "prerequisite: " `twilio --version`; \
+	fi
+	@[[ ! -z "$(TWILIOCLI)" ]]
+
+	$(eval SERVERLESS_PLUGIN := $(shell twilio plugins | grep serverless))
+	@if [[ -z "$(SERVERLESS_PLUGIN)" ]]; then \
+	  echo prerequisite: missing twilio serverless plugin, please install !!!; \
+	else \
+	  echo "prerequisite: " `twilio plugins | grep serverless`; \
+	fi
+	@[[ ! -z "$(SERVERLESS_PLUGIN)" ]]
+
+	$(eval JQ := $(shell which jq))
+	@if [[ -z "$(JQ)" ]]; then \
+	  echo prerequisite: missing jq, please install via 'brew install jq'!!!; \
+	else \
+	  echo "prerequisite: " `jq --version`; \
+	fi
+	@[[ ! -z "$(JQ)" ]]
+
+	$(eval XQ := $(shell which xq))
+	@if [[ -z "$(XQ)" ]]; then \
+	  echo prerequisite: missing xq, please install via 'brew install python-yq'!!!; \
+	else \
+	  echo "prerequisite: " `xq --version`; \
+	fi
+	@[[ ! -z "$(XQ)" ]]
+
+	$(eval NGROK := $(shell which ngrok))
+	@if [[ -z "$(NGROK)" ]]; then \
+	  echo prerequisite: missing ngrok, please install!!!; \
+	else \
+	  echo "prerequisite: " `ngrok --version`; \
+	fi
+	@[[ ! -z "$(NGROK)" ]]
+
+
 installer-build-github:
 	docker build --tag $(INSTALLER_NAME) $(DOCKER_EMULATION) --no-cache $(GIT_REPO_URL)#main
 
 
 installer-build-local:
+	docker system prune --force
+	docker volume prune --force
 	docker build --tag $(INSTALLER_NAME) $(DOCKER_EMULATION) --no-cache .
 
 
@@ -64,3 +116,53 @@ installer-open:
     done
 
 	open -a "Google Chrome" http://localhost:3000/installer/index.html
+
+
+run-serverless:
+	npm install
+	@if [[ ! -f .env.localhost ]]; then \
+      echo ".env.localhost needs to be copied from .env and value set!!! aborting..."; \
+    fi
+	@[[ -f .env.localhost ]]
+	twilio serverless:start --env=.env.localhost --load-local-env
+
+
+run-ngrok:
+	@if [[ -z "$(NGROK_HOSTNAME)" ]]; then \
+  	  echo 'Usage: make run-ngrok NGROK_HOSTNAME=your-ngrok-hostname e.g., bochoi.ngrok.io'; \
+	fi
+	@[[ ! -z "$(NGROK_HOSTNAME)" ]]
+
+	ngrok http --region=us --hostname=$(NGROK_HOSTNAME) 8661
+
+
+openemr-adjust-appointment-dates:
+	cd assets/ehr && ./openemr-adjust-appointment-dates.sh
+
+
+openemr-disable-triggers:
+	docker exec -i openemr_db mysql --user=root --password=root openemr < assets/ehr/openemr/drop_all_triggers.sql
+
+
+openemr-enable-triggers:
+	docker exec --interactive openemr_db mysql --user=root --password=root openemr < assets/ehr/openemr/create_appointment_insert_trigger.sql
+	docker exec --interactive openemr_db mysql --user=root --password=root openemr < assets/ehr/openemr/create_appointment_update_trigger.sql
+	docker exec --interactive openemr_db mysql --user=root --password=root openemr < assets/ehr/openemr/create_patient_update_trigger.sql
+
+
+openemr-backup-volumes:
+	@if [[ -z "$(BACKUP_NAME)" ]]; then \
+  	  echo 'Usage: make openemr-backup-volumes BACKUP_NAME=your-backup-name'; \
+	fi
+	@[[ ! -z "$(BACKUP_NAME)" ]]
+	cd assets/ehr/openemr && ./openemr-backup-volumes.sh $(BACKUP_NAME)
+
+
+openemr-restore-volumes:
+	@if [[ -z "$(BACKUP_NAME)" ]]; then \
+  	  echo 'Usage: make openemr-restore-volumes BACKUP_NAME=your-backup-name'; \
+	fi
+	@[[ ! -z "$(BACKUP_NAME)" ]]
+	cd assets/ehr && ./openemr-restore-volumes.sh $(BACKUP_NAME)
+
+

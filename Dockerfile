@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------------
 # Dockerfile for local installer
 # --------------------------------------------------------------------------------
-FROM twilio/twilio-cli:3.1.0
+FROM twilio/twilio-cli:3.3.0
 
 # install docker (-in-docker) for debian OS
 # https://docs.docker.com/engine/install/debian/#install-using-the-repository
