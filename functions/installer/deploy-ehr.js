@@ -55,7 +55,8 @@ exports.handler = async function(context, event, callback) {
           const fp = Runtime.getAssets()['/ehr/ehr-install.sh'].path;
           execSync(fp, { shell: '/bin/bash', env: {'PATH': process.env.PATH + MAC_PATH}, stdio: 'inherit',});
 
-          execSync("docker network connect hls-ehr_default hls-ehr-installer");
+          const isDockerInstaller = execSync("docker ps --all | grep hls-ehr-installer | wc -l");
+          if (isDockerInstaller === '1') execSync("docker network connect hls-ehr_default hls-ehr-installer");
         }
 
         { // apply iframe fix
@@ -65,7 +66,7 @@ exports.handler = async function(context, event, callback) {
 
         { // restore docker volumes
           const fp = Runtime.getAssets()['/ehr/openemr-restore-volumes.sh'].path;
-          execSync(`${fp} himss`, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit',});
+          execSync(`${fp} seed`, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit',});
         }
 
         { // adjust appointment dates to current week

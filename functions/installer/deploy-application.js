@@ -11,7 +11,7 @@
  * --------------------------------------------------------------------------------
  */
 const assert = require("assert");
-const { getParam, getAllParams } = require(Runtime.getFunctions()['helpers'].path);
+const { getParam, provisionParams } = require(Runtime.getFunctions()['helpers'].path);
 const { TwilioServerlessApiClient } = require('@twilio-labs/serverless-api');
 const { getListOfFunctionsAndAssets } = require('@twilio-labs/serverless-api/dist/utils/fs');
 const fs = require('fs');
@@ -39,9 +39,8 @@ exports.handler = async function(context, event, callback) {
       .services(service_sid)
       .update({ uiEditable: true });
 
-    console.log(THIS, 'Provisioning dependent Twilio services');
-    const params = await getAllParams(context);
-    //console.log(THIS, params);
+    // console.log(THIS, 'Provisioning dependent Twilio services');
+    // await provisionParams(context);
 
     console.log(THIS, `Completed deployment of ${application_name}`);
 

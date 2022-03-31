@@ -1,20 +1,8 @@
 /* --------------------------------------------------------------------------------
  * common helper function used by functions
- *
- * behavior depends on deployment status of the service
- *
- * getAllParams(context)
- * getParam(context, key)
- * setParam(context, key, value) - when running on localhost, sets variable on deployed service
- *
- * include via:
- *   const { getAllParams, getParam, setParam } = require(Runtime.getFunctions()['helper'].path);
- *
  * --------------------------------------------------------------------------------
  */
 const assert = require("assert");
-
-const SERVER_START_TIMESTAMP = new Date().toISOString().replace(/.\d+Z$/g, "Z");
 
 /* --------------------------------------------------------------------------------
  * is executing on localhost
@@ -36,16 +24,161 @@ function assertLocalhost(context) {
 
 
 /* --------------------------------------------------------------------------------
+ * retrieve environment variable value
+ *
+ * parameters:
+ * - context: Twilio Runtime context
+ *
+ * returns
+ * - value of specified environment variable. Note that SERVICE_SID & ENVIRONMENT_SID will return 'null' if not yet deployed
+ * --------------------------------------------------------------------------------
+ */
+async function getParam(context, key) {
+  assert(context.APPLICATION_NAME, 'undefined .env environment variable APPLICATION_NAME!!!');
+  assert(context.CUSTOMER_NAME, 'undefined .env environment variable CUSTOMER_NAME!!!');
+
+  if (key !== 'SERVICE_SID' // avoid warning
+    && key !== 'ENVIRONMENT_SID' // avoid warning
+    && context[key]) {
+    return context[key]; // first return context non-null context value
+  }
+
+  const client = context.getTwilioClient();
+  switch (key) {
+
+    case 'SERVICE_SID': // always required
+    {
+      const services = await client.serverless.services.list();
+      const service = services.find(s => s.friendlyName === context.APPLICATION_NAME);
+
+      // return sid only if deployed; otherwise null
+      return service ? service.sid : null;
+    }
+
+    case 'ENVIRONMENT_SID': // always required
+    {
+      const service_sid = await getParam(context, 'SERVICE_SID');
+      if (service_sid === null) return null; // service not yet deployed
+
+      const environments = await client.serverless
+        .services(service_sid)
+        .environments.list({limit : 1});
+
+      return environments.length > 0 ? environments[0].sid : null;
+    }
+
+    case 'ENVIRONMENT_DOMAIN': // always required
+    {
+      const service_sid = await getParam(context, 'SERVICE_SID');
+      if (service_sid === null) return null; // service not yet deployed
+
+      const environments = await client.serverless
+        .services(service_sid)
+        .environments.list({limit : 1});
+
+      return environments.length > 0 ? environments[0].domainName: null;
+    }
+
+    case 'SYNC_SID':
+    {
+      const services = await client.sync.services.list();
+      let service = services.find(s => s.friendlyName === context.APPLICATION_NAME);
+      if (! service) {
+        console.log(`Sync service not found so creating a new sync service friendlyName=${context.APPLICATION_NAME}`);
+        service = await client.sync.services.create({ friendlyName: context.APPLICATION_NAME });
+      }
+      if (! service) throw new Error('Unable to create a Twilio Sync Service!!! ABORTING!!!');
+
+      await setParam(context, key, service.sid);
+      return service.sid;
+    }
+
+    case 'VERIFY_SID':
+    {
+      const services = await client.verify.services.list();
+      let service = services.find(s => s.friendlyName === context.APPLICATION_NAME);
+      if (! service) {
+        console.log(`Verify service not found so creating a new verify service friendlyName=${context.APPLICATION_NAME}`);
+        service = await client.verify.services.create({ friendlyName: context.APPLICATION_NAME });
+      }
+      if (! service) throw new Error('Unable to create a Twilio Verify Service!!! ABORTING!!!');
+
+      await setParam(context, key, service.sid);
+      return service.sid;
+    }
+
+    default:
+      throw new Error(`Undefined key: ${key}!!!`);
+  }
+}
+
+
+/* --------------------------------------------------------------------------------
+ * deprovision environment variable
+ * --------------------------------------------------------------------------------
+ */
+async function provisionParams(context) {
+  const client = context.getTwilioClient();
+
+  return {
+    'SYNC_SID': await getParam(context, 'SYNC_SID'),
+    'VERIFY_SID': await getParam(context, 'VERIFY_SID'),
+  }
+}
+
+
+/* --------------------------------------------------------------------------------
+ * deprovision environment variable
+ * --------------------------------------------------------------------------------
+ */
+async function deprovisionParams(context) {
+  const client = context.getTwilioClient();
+
+  const resources = {};
+
+  const sync_id = await getParam(context, 'SYNC_SID');
+  if (sync_id) {
+    let sync_service = null;
+    try {
+      sync_service = await client.sync.services(sync_id).fetch();
+      if (sync_service) {
+        await client.sync.services(sync_id).remove();
+        resources['SYNC_SID'] = sync_id;
+      }
+    } catch (err) {
+      console.log(`no sync service SID=${sync_id}. skpping...`);
+    }
+  }
+
+  const verify_sid = await getParam(context, 'VERIFY_SID');
+  if (verify_sid) {
+    let verify_service = null;
+    try {
+      verify_service = await client.verify.services(verify_sid).fetch();
+      if (verify_service) {
+        await client.verify.services(verify_sid).remove();
+        resources['VERIFY_SID'] = verify_sid;
+      }
+    } catch (err) {
+      console.log(`no verify service SID=${verify_sid}. skpping...`);
+    }
+  }
+
+  return resources;
+}
+
+
+/* --------------------------------------------------------------------------------
  * sets environment variable on deployed service, does nothing on localhost
  * --------------------------------------------------------------------------------
  */
 async function setParam(context, key, value) {
   const service_sid = await getParam(context, 'SERVICE_SID');
   if (! service_sid) return null; // do nothing is service is not deployed
-  const environment_sid = await getParam(context, 'ENVIRONMENT_SID');
 
   const client = context.getTwilioClient();
 
+  const environment_sid = await getParam(context, 'ENVIRONMENT_SID');
   const variables = await client.serverless
     .services(service_sid)
     .environments(environment_sid)
@@ -74,248 +207,13 @@ async function setParam(context, key, value) {
   };
 }
 
-/* --------------------------------------------------------------------------------
- * retrieve environment variable value
- *
- * parameters:
- * - context: Twilio Runtime context
- *
- * returns
- * - value of specified environment variable. Note that SERVICE_SID & ENVIRONMENT_SID will return 'null' if not yet deployed
- * --------------------------------------------------------------------------------
- */
-async function getParam(context, key) {
-
-  const client = context.getTwilioClient();
-  try {
-    switch (key) {
-
-      case 'IS_LOCALHOST': {
-        return isLocalhost(context);
-      }
-
-      case 'SERVICE_SID': {
-        // will throw error when running on localhost, so lookup by name if localhost
-        if (! isLocalhost(context) && context.SERVICE_SID) return context.SERVICE_SID;
-
-        const services = await client.serverless.services.list();
-        const service = services.find(s => s.uniqueName === context.APPLICATION_NAME);
-
-        return (service && service.sid) ? service.sid : null;
-      }
-
-      case 'ENVIRONMENT_SID': {
-        // will throw error when running on localhost, so lookup by name if localhost
-        if (! isLocalhost(context) && context.ENVIRONMENT_SID) return context.ENVIRONMENT_SID;
-
-        const service_sid = await getParam(context, 'SERVICE_SID');
-        if (service_sid === null) {
-          return null; // service not yet deployed
-        }
-        const environments = await client.serverless
-          .services(service_sid)
-          .environments.list({limit : 1});
-
-        return environments.length > 0 ? environments[0].sid : null;
-      }
-
-      case 'ENVIRONMENT_DOMAIN': {
-        // will throw error when running on localhost, so lookup by name if localhost
-        const service_sid = await getParam(context, 'SERVICE_SID');
-        if (service_sid === null) {
-          return null; // service not yet deployed
-        }
-        const environment_sid = await getParam(context, 'ENVIRONMENT_SID');
-
-        const environment = await client.serverless
-          .services(service_sid)
-          .environments(environment_sid)
-          .fetch();
-
-        return environment.domainName;
-      }
-
-      case 'TWILIO_API_KEY_SID': {
-        // value set in .env takes precedence
-        if (context.TWILIO_API_KEY_SID) return context.TWILIO_API_KEY_SID
-
-        const apikeys = await client.keys.list();
-        let apikey = apikeys.find(k => k.friendlyName === context.APPLICATION_NAME);
-        if (apikey) {
-          await setParam(context, key, apikey.sid);
-          return apikey.sid;
-        }
-
-        console.log('API Key not found so creating a new API Key...');
-        await client.newKeys
-          .create({ friendlyName: context.APPLICATION_NAME })
-          .then((result) => {
-            apikey = result;
-          })
-          .catch(err => {
-            throw new Error('Unable to create a API Key!!! ABORTING!!!');
-          });
-
-        await setParam(context, key, apikey.sid);
-        await setParam(context, 'TWILIO_API_KEY_SECRET', apikey.secret);
-        context.TWILIO_API_KEY_SECRET = apikey.secret;
-
-        return apikey.sid;
-      }
-
-      case 'TWILIO_API_KEY_SECRET': {
-        // value set in .env takes precedence
-        if (context.TWILIO_API_KEY_SECRET) return context.TWILIO_API_KEY_SECRET
-
-        await getParam(context, 'TWILIO_API_KEY_SID');
-
-        return context.TWILIO_API_KEY_SECRET;
-      }
-
-      case 'TWILIO_CONVERSATIONS_SID': {
-        // value set in .env takes precedence
-        if (context.TWILIO_CONVERSATIONS_SID) return context.TWILIO_CONVERSATIONS_SID
-
-        const services = await client.conversations.services.list();
-        const service = services.find(s => s.friendlyName === context.APPLICATION_NAME);
-        if (service) {
-          await setParam(context, key, service.sid);
-          return service.sid;
-        }
-
-        console.log('Conversation service not found so creating a new conversation service...');
-        let sid = null;
-        await client.conversations.services
-          .create({ friendlyName: context.APPLICATION_NAME })
-          .then((result) => {
-            sid = result.sid;
-          })
-          .catch(err => {
-            throw new Error('Unable to create a Twilio Conversation Service!!! ABORTING!!!');
-          });
-        await setParam(context, key, sid);
-
-        return sid;
-      }
-
-      case 'TWILIO_SENDGRID_API_KEY': {
-        // value set in .env takes precedence
-        return context.TWILIO_SENDGRID_API_KEY
-      }
-
-      case 'TWILIO_SYNC_SID': {
-        // value set in .env takes precedence
-        if (context.TWILIO_SYNC_SID) return context.TWILIO_SYNC_SID
-
-        const services = await client.sync.services.list();
-        const service = services.find(s => s.friendlyName === context.APPLICATION_NAME);
-        if (service) {
-          await setParam(context, key, service.sid);
-          return service.sid;
-        }
-
-        console.log('Sync service not found so creating a new sync service...');
-        let sid = null;
-        await client.sync.services
-          .create({ friendlyName: context.APPLICATION_NAME })
-          .then((result) => {
-            sid = result.sid;
-          })
-          .catch(err => {
-            throw new Error('Unable to create a Twilio Sync Service!!! ABORTING!!!');
-          });
-        await setParam(context, key, sid);
-
-        return sid;
-      }
-
-      case 'TWILIO_VERIFY_SID': {
-        // value set in .env takes precedence
-        if (context.TWILIO_SYNC_SID) return context.TWILIO_SYNC_SID
-
-        const services = await client.verify.services.list();
-        const service = services.find(s => s.friendlyName === context.APPLICATION_NAME);
-        if (service) {
-          await setParam(context, key, service.sid);
-          return service.sid;
-        }
-
-        console.log('Verify service not found so creating a new verify service...');
-        let sid = null;
-        await client.verify.services
-          .create({ friendlyName: context.APPLICATION_NAME })
-          .then((result) => {
-            sid = result.sid;
-          })
-          .catch(err => {
-              throw new Error('Unable to create a Twilio Verify Service!!! ABORTING!!!');
-          });
-        await setParam(context, key, sid);
-
-        return sid;
-      }
-
-      case 'SERVER_START_TIMESTAMP': {
-        return SERVER_START_TIMESTAMP;
-      }
-
-      default:
-        if (key in context) return context[key];
-
-        throw new Error(`Undefined key: ${key}!!!`);
-    }
-  } catch (err) {
-    console.log(err);
-    throw err;
-  }
-}
-
-
-/* --------------------------------------------------------------------------------
- * retrieve all environment variable value
- *
- * Note that SERVICE_SID & ENVIRONMENT_SID will return 'null' if not yet deployed
- *
- * parameters:
- * - context: Twilio Runtime context
- *
- * returns
- * - object of all environment variable values
- * --------------------------------------------------------------------------------
- */
-async function getAllParams(context) {
-
-  const keys_context = Object.keys(context);
-  // keys defined in getParam function above
-  const keys_derived = [
-    'IS_LOCALHOST',
-  ];
-
-  // to force saving of 'secret'
-  await getParam(context, 'TWILIO_API_KEY_SID');
-
-  const keys_all = keys_context.concat(keys_derived).sort();
-  try {
-
-    const result = {};
-    for (k of keys_all) {
-      if (k === 'getTwilioClient') continue; // exclude getTwilioClient function
-      result[k] = await getParam(context, k);
-    }
-    return result;
-
-  } catch (err) {
-    console.log(err);
-    throw err;
-  }
-}
-
 
 // --------------------------------------------------------------------------------
 module.exports = {
-  getAllParams,
   getParam,
   setParam,
+  provisionParams,
+  deprovisionParams,
   isLocalhost,
   assertLocalhost,
-};
+}

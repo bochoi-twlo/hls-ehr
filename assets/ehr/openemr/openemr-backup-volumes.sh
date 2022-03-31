@@ -46,7 +46,7 @@ function backup_volume {
 
   docker run --name ${VOLUME_HELPER} --volumes-from ${DOCKER_CONTAINER} --interactive --detach ubuntu
 
-  docker exec ${VOLUME_HELPER} tar -cf ${BACKUP_TARFILE} --exclude='*ib_logfile0' ${DIRECTORY}
+  docker exec ${VOLUME_HELPER} tar -cf ${BACKUP_TARFILE} ${DIRECTORY}
   docker cp ${VOLUME_HELPER}:${BACKUP_TARFILE} ${BACKUP_TARFILE}
   gzip --best --force ${BACKUP_TARFILE}
 
