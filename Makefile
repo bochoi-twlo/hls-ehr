@@ -118,6 +118,13 @@ installer-open:
 	open -a "Google Chrome" http://localhost:3000/installer/index.html
 
 
+redeploy-mirth-channels:
+# for re-deploying failed mirth channel deployments
+# . if patient-appointment-management studio flow is redeployed, run this as FLOW_SID would have changed
+	cd assets/ehr; \
+	./mirth-deploy-channels.private.sh
+
+
 run-serverless:
 	npm install
 	@if [[ ! -f .env.localhost ]]; then \
@@ -137,7 +144,7 @@ run-ngrok:
 
 
 openemr-adjust-appointment-dates:
-	cd assets/ehr && ./openemr-adjust-appointment-dates.sh
+	cd assets/ehr && ./openemr-adjust-appointment-dates.private.sh
 
 
 openemr-disable-triggers:
@@ -164,5 +171,4 @@ openemr-restore-volumes:
 	fi
 	@[[ ! -z "$(BACKUP_NAME)" ]]
 	cd assets/ehr && ./openemr-restore-volumes.sh $(BACKUP_NAME)
-
 
