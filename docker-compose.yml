@@ -27,6 +27,8 @@ services:
     volumes:
       - v_openemr_log:/var/log
       - v_openemr_site:/var/www/localhost/htdocs/openemr/sites
+      - v_openemr_src:/var/www/localhost/htdocs/openemr/src
+      - v_openemr_interface:/var/www/localhost/htdocs/openemr/interface
     environment:
       MYSQL_HOST: openemr_db
       MYSQL_ROOT_PASS: root
@@ -111,6 +113,8 @@ services:
 volumes:
   v_openemr_log: {}
   v_openemr_site: {}
+  v_openemr_src: {}
+  v_openemr_interface: {}
   v_openemr_db: {}
   v_openemr_ie_app: {}
   v_mirth_app: {}
