@@ -69,6 +69,11 @@ exports.handler = async function(context, event, callback) {
           execSync(`${fp} seed`, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit',});
         }
 
+        { // apply iframe fix
+          const fp = Runtime.getAssets()['/ehr/openemr-apply-sso-hack.sh'].path;
+          execSync(fp, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit',});
+        }
+
         { // adjust appointment dates to current week
           const fp = Runtime.getAssets()['/ehr/openemr-adjust-appointment-dates.sh'].path;
           execSync(fp, { cwd: path.dirname(fp), shell: '/bin/bash', stdio: 'inherit'});

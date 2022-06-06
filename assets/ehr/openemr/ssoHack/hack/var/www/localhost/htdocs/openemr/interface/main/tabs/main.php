@@ -26,7 +26,7 @@ use OpenEMR\Core\Header;
 
 
 //EHR
-$pidForEhr = "4"; //patient id which should be selected
+// comment out here and below to suppress default patient ... $pidForEhr = "4"; //patient id which should be selected
 
 //get data with patient
 require_once("$srcdir/patient.inc");
@@ -44,7 +44,7 @@ $_SESSION['authUserID'] = '1';
 $_SESSION['authProvider'] = 'Default';
 $_SESSION['userauthorized'] = '1';
 //set patient id //TODO: set expected id here
-$_SESSION['pid'] = $pidForEhr;
+// comment out here and above to suppress default patient ... $_SESSION['pid'] = $pidForEhr;
 $_SESSION['alert_notify_pid'] = $pidForEhr;
 
 //echo '<pre>';
