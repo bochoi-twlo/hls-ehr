@@ -117,12 +117,7 @@ Remember that after HLS-EHR installation, `ngrok` will need to running in order 
 docker build --tag hls-ehr-installer --no-cache https://github.com/bochoi-twlo/hls-ehr.git#main
 ```
 
-For machines running Apple M1 chip add the option `--platform linux/amd64`.
-
-Alternatively, if you have git repo cloned locally
-```shell
-docker build --tag hls-ehr-installer --no-cache .
-```
+For machines running Apple M1/2 chip add the option `--platform linux/amd64`.
 
 ### Run Installer Docker Container
 
@@ -139,7 +134,7 @@ docker run --name hls-ehr-installer --rm --publish 3000:3000  \
 --interactive --tty hls-ehr-installer
 ```
 
-For machines running Apple M1 chip add the option `--platform linux/amd64`.
+For machines running Apple M1/2 chip add the option `--platform linux/amd64`.
 
 Monitor the output of the terminal and wait upto a minute for installer to startup.
 
@@ -148,6 +143,8 @@ Open http://localhost:3000/installer/index.html.
 ### Install
 
 Follow instruction in the installer while keeping terminal window visible to monitor long processes running.
+
+You can uninstall too if 'Remove ...' button is displayed and active. This will completely remove your installation.
 
 ### Stop Installer
 
