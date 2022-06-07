@@ -58,7 +58,7 @@ Note that this will re-launch chrome.
 If you will demo a blue print that will need to connect back to your macbook from the internet (e.g., "patient appointment management"), you need to install a reverse proxy.
 
 ```shell
-brew install ngrok/ngrok/ngrok
+brew install ngrok
 ```
 
 If you have twilio email, register at `ngrok.com` using your twilio email.
