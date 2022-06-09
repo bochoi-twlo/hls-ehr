@@ -74,7 +74,8 @@ and get yourself invited from hls team mebmer to assign a static ngrok url for y
 
 Once you are registered, you can sign into https://dashboard.ngrok.com/team/members
 
-To start ngrok using your static ngrok URL on local port 8661 (for mirth)
+If you need to connect to mirth from the internet,
+start ngrok using your static ngrok URL on local port 8661
 ```shell
 ngrok http --region=us --hostname=bochoi.ngrok.io 8661
 ```
@@ -87,7 +88,9 @@ ngrok http --region=us --hostname=bochoi.ngrok.io 8661
 
 ### Clean-up Previous Installation (Optional)
 
-Installer can remove, existing installation of docker compose stack named `hls-ehr`.
+Installer can remove, existing installation of docker compose stack named `hls-ehr`
+by clicking the [![](https://img.shields.io/badge/remove_ehr_on_localhost-blue?style=for-the-badge)]()
+
 However, if you have previous installed openEMR using a different docker compose stack
 , please remove the running docker container and image via the Docker Desktop or via command line
 
