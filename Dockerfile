@@ -3,6 +3,9 @@
 # --------------------------------------------------------------------------------
 FROM twilio/twilio-cli:3.3.0
 
+ARG GITHUB_SHA_ARG
+ENV GITHUB_SHA=$GITHUB_SHA_ARG
+
 # install docker (-in-docker) for debian OS
 # https://docs.docker.com/engine/install/debian/#install-using-the-repository
 RUN apt-get update
