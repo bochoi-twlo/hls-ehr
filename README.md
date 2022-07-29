@@ -1,31 +1,31 @@
-# HLS EMR 
+# HLS EHR (Electronic Health Record)
 
-##### Table of Contents
-- [Prerequisites](#prerequisites)
-- [Deploy HLS-EHR](#deploy-hls-ehr)
-- [Using HLS-EHR](#using-hls-ehr)
-- [Developer Notes](#developer-notes)
-
-
-This document details the requirements for deployment and configuration of HLS EHR.
+This document details the requirements for deployment and configuration of HLS EHR comprised of openEMR & Mirth Connect.
 
 HLS EHR is deployed using docker compose [docker-compose.yml](https://github.com/bochoi-twlo/hls-ehr/blob/main/docker-compose.yml).
 
+- [Installation](#installation)
+- [User Guide](#user-guide)
+- [Developer Notes](#developer-notes)
+
+
 ---
 
-## Prerequisites
+## Installation
 
----
+### Prerequisite
 
 The following prerequisites must be satisfied prior to installing the application.
 
-### Twilio Account
-
-You'll need a Twilio account to run the installer.
-If you don't already have a Twilio account then create a free trial account from [https://www.twilio.com/try-twilio](https://www.twilio.com/try-twilio)
-
-When the Twilio account is created, goto the console ([https://console.twilio.com/](https://console.twilio.com/))
-and note your `Account SID` and `Auth Token` as you will need it later.
+#### Provision Twilio Account
+You will need the following Twilio assets ready prior to installation:
+- **Twilio account**
+  - Create a Twilio account by signing up [here](https://www.twilio.com/try-twilio).
+  - *(You will use your login information to get started with the Quick Deploy installation on the app's CodeExchange page)*
+- **Twilio phone number**
+  - After provisioning your Twilio account, you will need to [purchase a phone number](https://www.twilio.com/console/phone-numbers/incoming) to use in the application.
+  - Make sure the phone number is SMS enabled
+  - *(This will be the number patients receive texts from)*
 
 ### Docker Desktop
 
@@ -80,13 +80,13 @@ start ngrok using your static ngrok URL on local port 8661
 ngrok http --region=us --hostname=bochoi.ngrok.io 8661
 ```
 
----
-
-## Deploy HLS-EHR
 
 ---
 
-### Clean-up Previous Installation (Optional)
+### Installation Steps
+
+
+#### Clean-up Previous Installation (Optional)
 
 Installer can remove, existing installation of docker compose stack named `hls-ehr`
 by clicking the [![](https://img.shields.io/badge/remove_ehr_on_localhost-blue?style=for-the-badge)]()
@@ -103,7 +103,7 @@ After container and image removal, unsued volumes need to be removed via
 docker volume prune --force
 ```
 
-### Patient-Appointment-Management Integration (Optional)
+#### Patient-Appointment-Management Integration (Optional)
 
 In order to integrate with patient-appointment-management integration
 , you **must** have `patient-appointment-managment` blueprint deployed in your target twilio account
@@ -114,15 +114,18 @@ After HLS-EHR installation, integration will work immediately.
 Remember that after HLS-EHR installation, `ngrok` will need to running in order to receive 2-way SMS.
 
 
-### Build Installer Docker Image
+#### Remove Docker Image
+
+First, to ensure installation using the latest docker image, execute the following in your terminal window
 
 ```shell
-docker build --tag hls-ehr-installer --no-cache https://github.com/bochoi-twlo/hls-ehr.git#main
+docker image rm twiliohls/hls-ehr-installer
 ```
 
-For machines running Apple M1/2 chip add the option `--platform linux/amd64`.
+If running on Apple Silicon (M1 chip), add `--platform linux/amd64` option.
 
-### Run Installer Docker Container
+
+#### Run Installer Docker Container
 
 Please ensure that you do not have any running processes that is listening on port 3000
 such development servers or another HLS docker installer still running.
@@ -134,34 +137,35 @@ Alternatively, have environment variable set in your terminal.
 docker run --name hls-ehr-installer --rm --publish 3000:3000  \
 --volume /var/run/docker.sock:/var/run/docker.sock \
 --env ACCOUNT_SID=${TWILIO_ACCOUNT_SID} --env AUTH_TOKEN=${TWILIO_AUTH_TOKEN} \
---interactive --tty hls-ehr-installer
+--interactive --tty twiliohls/hls-ehr-installer
 ```
 
-For machines running Apple M1/2 chip add the option `--platform linux/amd64`.
+If running on Apple Silicon (M1 chip), add `--platform linux/amd64` option.
 
-Monitor the output of the terminal and wait upto a minute for installer to startup.
 
-Open http://localhost:3000/installer/index.html.
+#### Open installer in browser
 
-### Install
+Open http://localhost:3000/installer/index.html
 
-Follow instruction in the installer while keeping terminal window visible to monitor long processes running.
+Fill in all required environment variables and/or change them to meet your needs.
+
+Click `Deploy` to install the application to your Twilio account
+and wait until installer indicates completion.
 
 You can uninstall too if 'Remove ...' button is displayed and active. This will completely remove your installation.
 
-### Stop Installer
 
-Once installation is complete, you can enter Control-C in the terminal to quit the installer
-, or alternatively remove the `hls-ehr-installer` docker container via the Docker Desktop
+#### Terminate installer
 
-Note that it may take a minute for installer docker container stopped properly and disappear.
+To terminate installer:
+- Enter Control-C in the terminal where `docker run ...` was executed
+- Stop the `hls-ehr-installer` docker container via the Docker Desktop
 
 
 ---
 
 ## Using HLS-EHR
 
----
 
 ### Open directly
 
@@ -173,7 +177,7 @@ Note that if you had previously access openEMR
 , some client javascript file may be cached in your browser.
 Please clear you cached files.
 
-## Open inside Twilio Flex Agent Desktop
+### Open inside Twilio Flex Agent Desktop
 
 OpenEMR can be embedded in the Twilio Flex agent desktop via `iframe`.
 
@@ -186,21 +190,21 @@ For windows command go [here](https://stackoverflow.com/questions/3102819/disabl
 
 ---
 
-# Developer Notes
+## Developer Notes
 
 - [Mirth Connect Administrator](#mirth-connect-administrator)
 - [Enabling Native & FHIR API](#enabling-native--fhir-api)
 - [TBD](#)
 - [Archive](#archive)
+
+
 ---
 
-<a name="mca"/>
-
-## Mirth Connect Administrator
+### Mirth Connect Administrator
 
 Mirth Connect Administrator is used for managing/monitoring EHR integration.
 
-### Installing MCA
+#### Installing MCA
 
 - Download MCA installable (mirth-administrator-launcher-1.1.0-macos.dmg)
   - Log into HLS AWS account (757418860937)
@@ -248,7 +252,7 @@ bochoi %
   ![mca](assets/images/mca-in-app-folder.png)
 
 
-### Launching MCA
+#### Launching MCA
 
 - MCA must be launched via command line as superuser. **Your MUST keep this terminal window running after MCA starts!**
 ```shell
@@ -269,13 +273,14 @@ cd "/Applications/Mirth Connect Administrator Launcher.app/Contents/MacOS"
 
 - MCA main window will display
 
+
 ---
 
-## Enabling Native & FHIR API
+### Enabling Native & FHIR API
 
 Source: [How to use Open EMR v6 API Password Grant Flow](https://benmarte.com/blog/openemr-api-v6/)
 
-### API Documentation
+#### API Documentation
 
 [Swagger API Documentation](https://eleven.openemr.io/a/openemr/swagger/index.html)
 
@@ -284,7 +289,7 @@ Note that above link for OpenEMR 7.0 API, we are currently on OpenEMR 6.0.
 OpenEMR 6.1 ships with swagger inclueded while OpenEMR 6.0 does not.
 
 
-### Enable API Service in OpenEMR
+#### Enable API Service in OpenEMR
 
 - Navigate to Administration &#8594; Globals &#8594; Connectors
 - Enter `http://localhost` in *'Site Address'*
@@ -321,7 +326,7 @@ OpenEMR 6.1 ships with swagger inclueded while OpenEMR 6.0 does not.
   ...
   ```
 
-### Register an API Client
+#### Register an API Client
 
 Register a client via:
 ```shell
@@ -368,9 +373,9 @@ Response should look like
 Reference: [API_README#registration](https://github.com/openemr/openemr/blob/master/API_README.md#registration)
 
 
-### Active API Client
+#### Activate API Client
 
-- Active API client in OpenEMR by navigating to Administration &#8594; System &#8594; API Clients
+- Activate API client in OpenEMR by navigating to Administration &#8594; System &#8594; API Clients
 
 ![api-clients](assets/images/openemr-api-clients.png)
 
@@ -380,9 +385,10 @@ Reference: [API_README#registration](https://github.com/openemr/openemr/blob/mas
 
 API Client is now ready!
 
-### Access Native & FHIR API
 
-#### Generate Access Token
+#### Access Native & FHIR API
+
+##### Generate Access Token
 
 Newly generated access token will expire in 1 hour (3600 seconds).
 Before current access token expires, it can be refreshed. see [Refresh Access Token](#refresh-access-token) below.
@@ -418,7 +424,7 @@ Response will look like
 ACCESS_TOKEN=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJsVENsS1JoVUpJUTl0YjNUTXBzeEVIRmVkN1FCaXFkaVhrejJoUHZwVzYwIiwianRpIjoiYzZiNjhmYjVlYWVjNzNkMWMzNjM5N2MyNGYwYzIxNGRmMzIzM2QyNzM4YmJlZGMyODg1NTA3MmQzOTI0ZTNkODE5YzY3MTQwMzJmNjVjNDYiLCJpYXQiOjE2NDg2MTI3MjQsIm5iZiI6MTY0ODYxMjcyNCwiZXhwIjoxNjQ4NjE2MzI0LCJzdWIiOiI5NWYwYmU0Yi02MWQ3LTRmYTctODU5ZS03OWQ4YzA3NGEzZDEiLCJzY29wZXMiOlsib3BlbmlkIiwib2ZmbGluZV9hY2Nlc3MiLCJhcGk6b2VtciIsImFwaTpmaGlyIiwiYXBpOnBvcnQiLCJ1c2VyXC9hbGxlcmd5LnJlYWQiLCJ1c2VyXC9hbGxlcmd5LndyaXRlIiwidXNlclwvYXBwb2ludG1lbnQucmVhZCIsInVzZXJcL2FwcG9pbnRtZW50LndyaXRlIiwidXNlclwvZGVudGFsX2lzc3VlLnJlYWQiLCJ1c2VyXC9kZW50YWxfaXNzdWUud3JpdGUiLCJ1c2VyXC9kb2N1bWVudC5yZWFkIiwidXNlclwvZG9jdW1lbnQud3JpdGUiLCJ1c2VyXC9kcnVnLnJlYWQiLCJ1c2VyXC9lbmNvdW50ZXIucmVhZCIsInVzZXJcL2VuY291bnRlci53cml0ZSIsInVzZXJcL2ZhY2lsaXR5LnJlYWQiLCJ1c2VyXC9mYWNpbGl0eS53cml0ZSIsInVzZXJcL2ltbXVuaXphdGlvbi5yZWFkIiwidXNlclwvaW5zdXJhbmNlLnJlYWQiLCJ1c2VyXC9pbnN1cmFuY2Uud3JpdGUiLCJ1c2VyXC9pbnN1cmFuY2VfY29tcGFueS5yZWFkIiwidXNlclwvaW5zdXJhbmNlX2NvbXBhbnkud3JpdGUiLCJ1c2VyXC9pbnN1cmFuY2VfdHlwZS5yZWFkIiwidXNlclwvbGlzdC5yZWFkIiwidXNlclwvbWVkaWNhbF9wcm9ibGVtLnJlYWQiLCJ1c2VyXC9tZWRpY2FsX3Byb2JsZW0ud3JpdGUiLCJ1c2VyXC9tZWRpY2F0aW9uLnJlYWQiLCJ1c2VyXC9tZWRpY2F0aW9uLndyaXRlIiwidXNlclwvbWVzc2FnZS53cml0ZSIsInVzZXJcL3BhdGllbnQucmVhZCIsInVzZXJcL3BhdGllbnQud3JpdGUiLCJ1c2VyXC9wcmFjdGl0aW9uZXIucmVhZCIsInVzZXJcL3ByYWN0aXRpb25lci53cml0ZSIsInVzZXJcL3ByZXNjcmlwdGlvbi5yZWFkIiwidXNlclwvcHJvY2VkdXJlLnJlYWQiLCJ1c2VyXC9zb2FwX25vdGUucmVhZCIsInVzZXJcL3NvYXBfbm90ZS53cml0ZSIsInVzZXJcL3N1cmdlcnkucmVhZCIsInVzZXJcL3N1cmdlcnkud3JpdGUiLCJ1c2VyXC92aXRhbC5yZWFkIiwidXNlclwvdml0YWwud3JpdGUiLCJ1c2VyXC9BbGxlcmd5SW50b2xlcmFuY2UucmVhZCIsInVzZXJcL0NhcmVUZWFtLnJlYWQiLCJ1c2VyXC9Db25kaXRpb24ucmVhZCIsInVzZXJcL0VuY291bnRlci5yZWFkIiwidXNlclwvSW1tdW5pemF0aW9uLnJlYWQiLCJ1c2VyXC9Mb2NhdGlvbi5yZWFkIiwidXNlclwvTWVkaWNhdGlvbi5yZWFkIiwidXNlclwvTWVkaWNhdGlvblJlcXVlc3QucmVhZCIsInVzZXJcL09ic2VydmF0aW9uLnJlYWQiLCJ1c2VyXC9Pcmdhbml6YXRpb24ucmVhZCIsInVzZXJcL09yZ2FuaXphdGlvbi53cml0ZSIsInVzZXJcL1BhdGllbnQucmVhZCIsInVzZXJcL1BhdGllbnQud3JpdGUiLCJ1c2VyXC9QcmFjdGl0aW9uZXIucmVhZCIsInVzZXJcL1ByYWN0aXRpb25lci53cml0ZSIsInVzZXJcL1ByYWN0aXRpb25lclJvbGUucmVhZCIsInVzZXJcL1Byb2NlZHVyZS5yZWFkIiwicGF0aWVudFwvZW5jb3VudGVyLnJlYWQiLCJwYXRpZW50XC9wYXRpZW50LnJlYWQiLCJwYXRpZW50XC9FbmNvdW50ZXIucmVhZCIsInBhdGllbnRcL1BhdGllbnQucmVhZCIsInNpdGU6ZGVmYXVsdCJdfQ.WqVZjYhTQJOzVv7jLGWkDcpjErk83plx5pk-jqvKVmeTSLIJObJ6Kz9YZ7urTSI2DePqqVXmmFG3sh0qnJUPEBIiOrdLu4lbIYS4J9JqfvKU-GupcqL1MWmNjX5MVhfXmw97zUBuNA6RPUUQ_RedQTtYFhE7mIjAbDzchXJ-L4gPet9tp1RDULiHDS4iVQ1gebIKcbBFubtJE2R1MrUFODZpMhQU2ZoC9ywCR_HPKuBXgXsbJxYg_cSm5SrmaeN3tcBjnBRyhY-F9hekQEG8J26toECysp5Rx81W-lgICnlktXhQsH6Aag0A1HupPNNYMG-zH3p27TrbrG-S2jplVA
 ```
 
-#### Refresh Access Token
+##### Refresh Access Token
 
 The inital access token **must** include `offline_access` in the `scope` parameter.
 
@@ -443,7 +449,7 @@ Response will look like
 ```
 
 
-#### Access Native API (Patient)
+##### Access Native API (Patient)
 
 Get all patients
 
@@ -492,7 +498,7 @@ response should look like
 ...
 ```
 
-#### Access FHIR API (Patient)
+##### Access FHIR API (Patient)
 
 Get all patients
 
@@ -536,7 +542,7 @@ response should look like
 ...
 ```
 
-### API Client Template Code
+#### API Client Template Code
 
 |`.env` variables| notes |
 |----------------|-------|
@@ -553,9 +559,11 @@ herlps.private.js
 ```
 
 
-## Initial Setup of HLS-EHR stack
+---
 
-### OpenEMR
+### Initial Setup of HLS-EHR stack
+
+#### OpenEMR
 
 After deployment of docker compose stack, cd to `assets/ehr/openemr` directory and execute the following:
 
@@ -585,18 +593,18 @@ To disable triggers, temporarily drop them and re-create them.
 openemr $ docker exec -i openemr_db mysql --user=root --password=root openemr < drop_all_triggers.sql
 ```
 
-### OpenEMR IE (Mirth Interface Engine)
+#### OpenEMR IE (Mirth Interface Engine)
 
 TODO
 
-### Mirth
+#### Mirth
 
 TODO
+
 
 ---
 
-
-## Archive
+### Archive
 
 Below are archive old documentation and therefore may not be accurate and/or complete.
 
@@ -605,7 +613,7 @@ Examine the docker dashboard and check that all 6 docker containers are running 
 ![Docker Dashboard with HLS-EHR Running](assets/images/docker-dashboard.png)
 
 
-### Configure OpenEMR
+#### Configure OpenEMR
 
 - If first-time, clone the git repo that will create a directory `hls-ehr` where you run the command below
 ```shell
@@ -688,16 +696,3 @@ From main directory (`.../hls-ehr`)
 hls-ehr $ cd assets/hls-ehr/openemr
 openemr $ docker exec -i openemr_db mysql -u root -proot openemr < script_advance_appointments_one_week.sql
 ```
-
-## Installer
-
-
-[![](https://img.shields.io/badge/enabled-blue?style=for-the-badge)]()
-
-[![](https://img.shields.io/badge/enabled-blue)]()
-
-
-```diff
-- fdfsfsf
-```
-

@@ -14,25 +14,30 @@
  */
 const assert = require("assert");
 const { execSync } = require('child_process');
-const { getParam } = require(Runtime.getFunctions()['helpers'].path);
+const { getParam, fetchVersionToDeploy } = require(Runtime.getFunctions()['helpers'].path);
 
 exports.handler = async function (context, event, callback) {
-  const THIS = 'check-application';
+  const THIS = 'check';
 
   assert(context.DOMAIN_NAME.startsWith('localhost:'), `Can only run on localhost!!!`);
   console.time(THIS);
   try {
 
     // ---------- check serverless ----------------------------------------
-    const service_sid        = await getParam(context, 'SERVICE_SID');
-    const environment_domain = service_sid ? await getParam(context, 'ENVIRONMENT_DOMAIN') : null;
-    const application_url    = service_sid ? `https:/${environment_domain}/administration.html` : null;
+    const service_sid         = await getParam(context, 'SERVICE_SID');
+    const application_version = await getParam(context, 'APPLICATION_VERSION');
+    const environment_domain  = service_sid ? await getParam(context, 'ENVIRONMENT_DOMAIN') : null;
+    const application_url     = service_sid ? `https:/${environment_domain}/administration.html` : null;
 
     // ---------- check ehr ----------------------------------------
     const deployed = execSync('docker ps --all | grep openemr_app | wc -l').toString().trim() === '1';
     const running  = execSync('docker ps | grep openemr_app | wc -l').toString().trim() === '1';
     const ehr_information = {
       deploy_state: deployed ? 'DEPLOYED' : 'NOT-DEPLOYED',
+      version: {
+        deployed : application_version,
+        to_deploy: await fetchVersionToDeploy(),
+      },
       running_status: running ? 'RUNNING' : 'EXITED',
     };
 
