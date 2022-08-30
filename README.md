@@ -284,7 +284,24 @@ If you wish to create EC2 instance from AMI that is pre-configured, please skip 
 
 If you wish create from scatch EC2 instance, please skip this step.
 
-TBD
+- Login into `moneytronic` AWS account at https://moneytronic.signin.aws.amazon.com/console
+- Goto EC2 console at https://us-west-2.console.aws.amazon.com/ec2/v2/home?region=us-west-2#Home:
+- Make sure EC2 instance named `hls-ehr` doesn't already exist.
+  If it does exist, please terminate the instance first
+- Create new EC2 instance via clicking ![](https://img.shields.io/badge/-Launch_instance-orange).
+  Keep all default and confirm/change only the following:
+
+| Section            |Property|Value|Notes|
+| ------------------------- | ----- | ---------- | ----- |
+| Name and tags             | Name          |`hls-ehr`
+| Application and OS Images | AMI from 'My AMIs' |`hls-ehr-ami`
+| Instance type             | Instance type |`t3.large`|2vCPU & 8GB memory
+| Key pair (login)          | Key pair name |`hls`
+| Network settings          | Auto-asssign public IP |`Enable`
+|                           | Firewall      | Select existing security group `hls-ehr-sg`
+| Configure storage         |               |`25 GiB gp2`
+
+- Launch instance
 
 
 #### Check EC2 Instance Creation
@@ -387,10 +404,10 @@ git clone https://github.com/bochoi-twlo/hls-ehr.git
 - Copy certificate & key files to `openemr_app` docker container
 ```shell
 docker exec openemr_app mkdir /var/www/localhost/htdocs/openemr/ssl
-docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/Server.key openemr_app:/var/www/localhost/htdocs/openemr/ssl/Server.key
-docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/Server.crt openemr_app:/var/www/localhost/htdocs/openemr/ssl/Server.crt
-docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/CertificateAuthority.key openemr_app:/var/www/localhost/htdocs/openemr/ssl/CertificateAuthority.key
-docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/CertificateAuthority.crt openemr_app:/var/www/localhost/htdocs/openemr/ssl/CertificateAuthority.crt
+docker cp ~/hls-ehr/ssl-ehr.cloudcityhealthcare.com/Server.key openemr_app:/var/www/localhost/htdocs/openemr/ssl/Server.key
+docker cp ~/hls-ehr/ssl-ehr.cloudcityhealthcare.com/Server.crt openemr_app:/var/www/localhost/htdocs/openemr/ssl/Server.crt
+docker cp ~/hls-ehr/ssl-ehr.cloudcityhealthcare.com/CertificateAuthority.key openemr_app:/var/www/localhost/htdocs/openemr/ssl/CertificateAuthority.key
+docker cp ~/hls-ehr/ssl-ehr.cloudcityhealthcare.com/CertificateAuthority.crt openemr_app:/var/www/localhost/htdocs/openemr/ssl/CertificateAuthority.crt
 docker exec openemr_app chmod 700 /var/www/localhost/htdocs/openemr/ssl/Server.key
 docker exec openemr_app chmod 700 /var/www/localhost/htdocs/openemr/ssl/Server.crt
 docker exec openemr_app chmod 700 /var/www/localhost/htdocs/openemr/ssl/CertificateAuthority.key
@@ -400,10 +417,10 @@ docker exec openemr_app chmod 700 /var/www/localhost/htdocs/openemr/ssl/Certific
 
 - Replace SSL configuration on `openemr_app` docker container
 ```shell
-docker exec openemr_app cp /etc/apache2/conf.d/openemr.conf /etc/apache2/conf.d/openemr-original.conf
-docker exec openemr_app cp /etc/apache2/conf.d/ssl.conf     /etc/apache2/conf.d/ssl-original.conf
-docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/openemr.conf openemr_app:/etc/apache2/conf.d/openemr.conf
-docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/ssl.conf     openemr_app:/etc/apache2/conf.d/ssl.conf
+docker exec openemr_app cp /etc/apache2/conf.d/openemr.conf /etc/apache2/conf.d/openemr.conf.original
+docker exec openemr_app cp /etc/apache2/conf.d/ssl.conf     /etc/apache2/conf.d/ssl.conf.original
+docker cp ~/hls-ehr/ssl-ehr.cloudcityhealthcare.com/openemr.conf openemr_app:/etc/apache2/conf.d/openemr.conf
+docker cp ~/hls-ehr/ssl-ehr.cloudcityhealthcare.com/ssl.conf     openemr_app:/etc/apache2/conf.d/ssl.conf
 
 ```
 
@@ -434,8 +451,8 @@ After fully provisioning HLS-EHR starting scartch EC2 instance, you can create a
 - Goto EC2 console at https://us-west-2.console.aws.amazon.com/ec2/v2/home?region=us-west-2#Home:
 - If AMI named `hls-ehr-ami` already exists, delete it
 - Select `hls-ehr` EC2 instance and choose 'Create Image' action
-- TBD
-
+- Image name: `hls-ehr-ami`
+- Click ![](https://img.shields.io/badge/-Create_image-orange)
 
 --------------------------------------------------------------------------------
 ## Mirth Connect Administrator
