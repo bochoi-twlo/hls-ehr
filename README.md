@@ -1,23 +1,54 @@
 # HLS EHR (Electronic Health Record)
 
-This document details the requirements for deployment and configuration of HLS EHR comprised of openEMR & Mirth Connect.
+Documentation for installation & using HLS-EHR comprised of openEMR & Mirth Connect
+deployed using docker compose (see [docker-compose.yml](https://github.com/bochoi-twlo/hls-ehr/blob/main/docker-compose.yml)).
 
-HLS EHR is deployed using docker compose [docker-compose.yml](https://github.com/bochoi-twlo/hls-ehr/blob/main/docker-compose.yml).
-
-- [Installation](#installation)
 - [User Guide](#user-guide)
+- [Installation on Localhost](#installation-on-localhost)
 - [Developer Notes](#developer-notes)
 
 
----
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+# User Guide
 
-## Installation
 
-### Prerequisite
+## Open directly
+
+Either click the link `Open EHR` in the installer
+that will open `http://localhost:80/interface/login/login.php?site=default`
+and login using the credentials `admin/pass`
+
+Note that if you had previously access openEMR
+, some client javascript file may be cached in your browser.
+Please clear you cached files.
+
+## Open inside Twilio Flex Agent Desktop
+
+OpenEMR can be embedded in the Twilio Flex agent desktop via `iframe`.
+
+Launch chrome via cli.
+```shell
+open -na Google\ Chrome --args --user-data-dir=/tmp/temporary-chrome-profile-dir --disable-web-security --disable-site-isolation-trials
+```
+For windows command go [here](https://stackoverflow.com/questions/3102819/disable-same-origin-policy-in-chrome)
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+# Installation on Localhost
+
+If you wish to run HLS-EHR (OpenEMR) locally to have your private instance,
+please follow the instructions in this section.
+
+Alternatively, you can use the shared HLS-EHR instance available in AWS.
+
+--------------------------------------------------------------------------------
+## Prerequisite
 
 The following prerequisites must be satisfied prior to installing the application.
 
-#### Provision Twilio Account
+### Provision Twilio Account
 You will need the following Twilio assets ready prior to installation:
 - **Twilio account**
   - Create a Twilio account by signing up [here](https://www.twilio.com/try-twilio).
@@ -27,11 +58,13 @@ You will need the following Twilio assets ready prior to installation:
   - Make sure the phone number is SMS enabled
   - *(This will be the number patients receive texts from)*
 
+
 ### Docker Desktop
 
 Install Docker desktop that includes docker compose CLI will be used to run the application installer locally on your machine.
 Goto [Docker Desktop](https://www.docker.com/products/docker-desktop) and install with default options.
 After installation make sure to start Docker desktop.
+
 
 ### Allow Chrome Insecure `localhost` Connection
 
@@ -81,12 +114,11 @@ ngrok http --region=us --hostname=bochoi.ngrok.io 8661
 ```
 
 
----
+--------------------------------------------------------------------------------
+## Installation Steps
 
-### Installation Steps
 
-
-#### Clean-up Previous Installation (Optional)
+### Clean-up Previous Installation (Optional)
 
 Installer can remove, existing installation of docker compose stack named `hls-ehr`
 by clicking the [![](https://img.shields.io/badge/remove_ehr_on_localhost-blue?style=for-the-badge)]()
@@ -103,7 +135,7 @@ After container and image removal, unsued volumes need to be removed via
 docker volume prune --force
 ```
 
-#### Patient-Appointment-Management Integration (Optional)
+### Patient-Appointment-Management Integration (Optional)
 
 In order to integrate with patient-appointment-management integration
 , you **must** have `patient-appointment-managment` blueprint deployed in your target twilio account
@@ -114,7 +146,7 @@ After HLS-EHR installation, integration will work immediately.
 Remember that after HLS-EHR installation, `ngrok` will need to running in order to receive 2-way SMS.
 
 
-#### Remove Docker Image
+### Remove Docker Image
 
 First, to ensure installation using the latest docker image, execute the following in your terminal window
 
@@ -125,7 +157,7 @@ docker image rm twiliohls/hls-ehr-installer
 If running on Apple Silicon (M1 chip), add `--platform linux/amd64` option.
 
 
-#### Run Installer Docker Container
+### Run Installer Docker Container
 
 Please ensure that you do not have any running processes that is listening on port 3000
 such development servers or another HLS docker installer still running.
@@ -143,7 +175,7 @@ docker run --name hls-ehr-installer --rm --publish 3000:3000  \
 If running on Apple Silicon (M1 chip), add `--platform linux/amd64` option.
 
 
-#### Open installer in browser
+### Open installer in browser
 
 Open http://localhost:3000/installer/index.html
 
@@ -155,56 +187,253 @@ and wait until installer indicates completion.
 You can uninstall too if 'Remove ...' button is displayed and active. This will completely remove your installation.
 
 
-#### Terminate installer
+### Terminate installer
 
 To terminate installer:
 - Enter Control-C in the terminal where `docker run ...` was executed
 - Stop the `hls-ehr-installer` docker container via the Docker Desktop
 
 
----
 
-## Using HLS-EHR
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+# Developer Notes
 
-
-### Open directly
-
-Either click the link `Open EHR` in the installer
-that will open http://localhost:80/interface/login/login.php?site=default
-and login using the credentials `admin/pass`
-
-Note that if you had previously access openEMR
-, some client javascript file may be cached in your browser.
-Please clear you cached files.
-
-### Open inside Twilio Flex Agent Desktop
-
-OpenEMR can be embedded in the Twilio Flex agent desktop via `iframe`.
-
-Launch chrome via cli.
-```shell
-open -na Google\ Chrome --args --user-data-dir=/tmp/temporary-chrome-profile-dir --disable-web-security --disable-site-isolation-trials
-```
-For windows command go [here](https://stackoverflow.com/questions/3102819/disable-same-origin-policy-in-chrome)
-
-
----
-
-## Developer Notes
-
+- [Installation on AWS](#installation-on-aws)
 - [Mirth Connect Administrator](#mirth-connect-administrator)
 - [Enabling Native & FHIR API](#enabling-native--fhir-api)
 - [TBD](#)
 - [Archive](#archive)
 
 
----
+--------------------------------------------------------------------------------
+## Installation on AWS
 
-### Mirth Connect Administrator
+Instructions to install HLS-EHR in AWS for shared use.
+Docker engine running on EC2 instance will host HLS-EHR installation.
+Endpoint will be `ehr.cloudcityhealthcare.com`.
+
+0. [AWS Setup for HLS](#0-aws-setup-for-hls)
+1. [Provision EC2 Instance](#1-provision-ec2-instance)
+2. [Configure DNS](#2-configure-dns)
+3. [Install Docker Engine on EC2](#3-install-docker-engine-on-ec2)
+4. [Install HLS-EHR on EC2 in Docker](#4-install-hls-ehr-on-ec2-in-docker)
+5. [Configure SSL on OpenEMR](#5-configure-ssl-on-openemr)
+
+
+### Prerequisites
+
+#### Access to `moneytronic` AWS Account
+
+- login access to `moneytronic` AWS Account. Ask demo engineering.
+- `hls.pem` private key file for SSH into AWS. Ask HLS engineering.
+  Make sure to change file permission via `chmod 400 hls.pem`
+
+
+#### Twilio Account
+
+You will need `ACCOUNT_SID` & `AUTH_TOKEN` of a provisioned Twilio account in order to
+run the installer.
+
+
+### 0. AWS Setup for HLS
+
+For new AWS accounts, the following resources need to be configured for HLS use.
+Skip this step, if the resources already exist.
+
+- VPC (`hls-vpc`) in `us-west-2` region using wizard
+  - 2 public subnets: `hls-subnet-public1-us-west-2a`, `hls-subnet-public1-us-west-2b`
+    - internet gateway attached to public subnets
+  - 2 private subnets: `hls-subnet-private1-us-west-2a`, `hls-subnet-private2-us-west-2b`
+  - Security groups
+    - `hls-ehr-sg` with inbound rule: 22, 80, 443, 3000 from 0.0.0.0/0
+- Route53
+  - Hosted zone: `cloudcityhealthcare.com`
+
+
+### 1. Provision EC2 Instance
+
+Create EC2 instance either from Scratch or AMI
+
+
+#### Create EC2 Instance from Scratch
+
+If you wish to create EC2 instance from AMI that is pre-configured, please skip this section.
+
+- Login into `moneytronic` AWS account at https://moneytronic.signin.aws.amazon.com/console
+- Goto EC2 console at https://us-west-2.console.aws.amazon.com/ec2/v2/home?region=us-west-2#Home:
+- Make sure EC2 instance named `hls-ehr` doesn't already exist.
+  If it does exist, please terminate the instance first
+- Create new EC2 instance via clicking ![](https://img.shields.io/badge/-Launch_instance-orange).
+  Keep all default and confirm/change only the following:
+
+| Section            |Property|Value|Notes|
+| ------------------------- | ----- | ---------- | ----- |
+| Name and tags             | Name          |`hls-ehr`
+| Application and OS Images | AMI           |`Amazon Linux 2`
+| Instance type             | Instance type |`t3.large`|2vCPU & 8GB memory
+| Key pair (login)          | Key pair name |`hls`
+| Network settings          | Auto-asssign public IP |`Enable`
+|                           | Firewall      | Select existing security group `hls-ehr-sg`
+| Configure storage         |               |`25 GiB gp2`
+
+- Launch instance
+
+
+#### Create EC2 Instance from AMI
+
+If you wish create from scatch EC2 instance, please skip this step.
+
+TBD
+
+
+#### Check EC2 Instance Creation
+
+- Note the pubic IP of the EC2 instance
+- Confirm that you can SSH into the new EC2 instance.
+  Connect/SSH to instance from directory containing `hls.pem` file via command
+  , where `xx.yy.zz.mm` is the public IP of EC2 instance
+```shell
+ssh -i hls.pem ec2-user@xx.yy.zz.mm
+```
+
+
+### 2. Configure DNS
+
+- Goto Route53 console at https://us-east-1.console.aws.amazon.com/route53/v2/hostedzones
+- Select `cloudcityhealthcare.com` zone
+- Set/Update `A` record for `ehr.cloudcityhealthcare.com` to the public IP of EC2 instance
+
+
+### 3. Install Docker Engine on EC2
+
+Skip this step, if EC2 instance was not created from AMI.
+
+- SSH to EC2 instance
+- Execute the following answering `y` as needed
+```shell
+sudo yum update -y
+sudo amazon-linux-extras install docker
+sudo yum install docker 
+sudo service docker start 
+sudo usermod -a -G docker ec2-user 
+```
+
+- Logout of EC2 instance and connect again and confirm docker installation.
+  Docker version should be v20.10.17 or higher
+```shell
+docker --version
+```
+
+- Install docker-compose.
+  Docker compose version should be v2.10.2 or higher
+```shell
+sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+docker-compose version
+```
+
+Reference: https://stackoverflow.com/questions/63708035/installing-docker-compose-on-amazon-ec2-linux-2-9kb-docker-compose-file
+
+
+### 4. Install HLS-EHR on EC2 in Docker
+
+Skip this step, if EC2 instance was not created from AMI.
+
+- SSH to EC2 instance
+- In SSH terminal, start the installer following [Run Installer Docker Container](#run-installer-docker-container)
+- In your laptop broswer, open http://xx.yy.zz.mm:3000/instaler/index.html
+- Wait for page to load and then click ![](https://img.shields.io/badge/-Deploy_EHR-blue)
+- Wait for installation to finish, error message on Mirth is okay to ignore
+- Open another terminal and SSH to EC2
+- List all running processes on EC2
+```shell
+$ ps -a
+  PID TTY          TIME CMD
+ 3751 pts/0    00:00:00 docker
+ 9539 pts/1    00:00:00 ps
+```
+- Note the PID of CMD `docker`
+- Run `kill -9 3751` to terminate the running docker installer
+- Check all docker containers running
+```shell
+$ docker container list
+CONTAINER ID   IMAGE                                  COMMAND                  CREATED          STATUS          PORTS                                                                                                                             NAMES
+61040a7167c1   nextgenhealthcare/connect:3.10.1-jdk   "/entrypoint.sh ./mc…"   10 minutes ago   Up 10 minutes   0.0.0.0:8081->8080/tcp, :::8081->8080/tcp, 0.0.0.0:8444->8443/tcp, :::8444->8443/tcp                                              openemr_ie
+def3913729a5   openemr/openemr:6.0.0                  "./run_openemr.sh"       10 minutes ago   Up 8 minutes    0.0.0.0:80->80/tcp, :::80->80/tcp, 0.0.0.0:443->443/tcp, :::443->443/tcp                                                          openemr_app
+434eda2b375a   nextgenhealthcare/connect:3.10.1-jdk   "/entrypoint.sh ./mc…"   10 minutes ago   Up 10 minutes   0.0.0.0:8080->8080/tcp, :::8080->8080/tcp, 0.0.0.0:8443->8443/tcp, :::8443->8443/tcp, 0.0.0.0:8661->8661/tcp, :::8661->8661/tcp   mirth_app
+5dea5484815d   postgres:13.2                          "docker-entrypoint.s…"   10 minutes ago   Up 10 minutes   0.0.0.0:5433->5432/tcp, :::5433->5432/tcp                                                                                         openemr_ie_db
+33394ad54f54   postgres:13.2                          "docker-entrypoint.s…"   10 minutes ago   Up 10 minutes   0.0.0.0:5432->5432/tcp, :::5432->5432/tcp                                                                                         mirth_db
+2e7a2141ca26   mariadb:10.5                           "docker-entrypoint.s…"   10 minutes ago   Up 8 minutes    0.0.0.0:3306->3306/tcp, :::3306->3306/tcp                                                                                         openemr_db
+daa1d9e4e419   twiliohls/hls-ehr-installer            "docker-entrypoint.s…"   13 minutes ago   Up 13 minutes   0.0.0.0:3000->3000/tcp, :::3000->3000/tcp                                                                                         hls-ehr-installer
+```
+
+
+### 5. Configure SSL on OpenEMR
+
+Skip this step, if EC2 instance was not created from AMI.
+
+- SSH to EC2 instance
+- Install `git`
+```shell
+sudo yum install git -y
+```
+
+- Clone HLS-EHR git repo
+```shell
+git clone https://github.com/bochoi-twlo/hls-ehr.git
+```
+
+- Copy certificate & key files to `openemr_app` docker container
+```shell
+docker exec openemr_app mkdir /var/www/localhost/htdocs/openemr/ssl
+docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/Server.key openemr_app:/var/www/localhost/htdocs/openemr/ssl/Server.key
+docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/Server.crt openemr_app:/var/www/localhost/htdocs/openemr/ssl/Server.crt
+docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/CertificateAuthority.key openemr_app:/var/www/localhost/htdocs/openemr/ssl/CertificateAuthority.key
+docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/CertificateAuthority.crt openemr_app:/var/www/localhost/htdocs/openemr/ssl/CertificateAuthority.crt
+```
+
+- Replace SSL configuration on `openemr_app` docker container
+```shell
+docker exec openemr_app cp /etc/apache2/conf.d/openemr.conf /etc/apache2/conf.d/openemr-original.conf
+docker exec openemr_app cp /etc/apache2/conf.d/ssl.conf     /etc/apache2/conf.d/ssl-original.conf
+docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/openemr.conf openemr_app:/etc/apache2/conf.d/openemr.conf
+docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/ssl.conf      openemr_app:/etc/apache2/conf.d/ssl.conf
+```
+
+- Connect to `openemr_app` docker container
+
+```shell
+docker exec -it openemr_app /bin/sh
+```
+
+- Copy
+
+
+
+- From you laptop chrome, open https://ehr.cloudcityhealthcare.com
+- The OpenEMR login page should display and you can login using `admin/pass` credentials
+- Exit docker container
+- Exit EC2 instance
+
+
+### 6. Creating new AMI
+
+After fully provisioning HLS-EHR starting scartch EC2 instance, you can create a new AMI.
+
+- Login into `moneytronic` AWS account at https://moneytronic.signin.aws.amazon.com/console
+- Goto EC2 console at https://us-west-2.console.aws.amazon.com/ec2/v2/home?region=us-west-2#Home:
+- If AMI named `hls-ehr-ami` already exists, delete it
+- Select `hls-ehr` EC2 instance and choose 'Create Image' action
+- TBD
+
+
+--------------------------------------------------------------------------------
+## Mirth Connect Administrator
 
 Mirth Connect Administrator is used for managing/monitoring EHR integration.
 
-#### Installing MCA
+### Installing MCA
 
 - Download MCA installable (mirth-administrator-launcher-1.1.0-macos.dmg)
   - Log into HLS AWS account (757418860937)
@@ -252,7 +481,7 @@ bochoi %
   ![mca](assets/images/mca-in-app-folder.png)
 
 
-#### Launching MCA
+### Launching MCA
 
 - MCA must be launched via command line as superuser. **Your MUST keep this terminal window running after MCA starts!**
 ```shell
@@ -274,13 +503,13 @@ cd "/Applications/Mirth Connect Administrator Launcher.app/Contents/MacOS"
 - MCA main window will display
 
 
----
 
-### Enabling Native & FHIR API
+--------------------------------------------------------------------------------
+## Enabling Native & FHIR API
 
 Source: [How to use Open EMR v6 API Password Grant Flow](https://benmarte.com/blog/openemr-api-v6/)
 
-#### API Documentation
+### API Documentation
 
 [Swagger API Documentation](https://eleven.openemr.io/a/openemr/swagger/index.html)
 
@@ -289,7 +518,7 @@ Note that above link for OpenEMR 7.0 API, we are currently on OpenEMR 6.0.
 OpenEMR 6.1 ships with swagger inclueded while OpenEMR 6.0 does not.
 
 
-#### Enable API Service in OpenEMR
+### Enable API Service in OpenEMR
 
 - Navigate to Administration &#8594; Globals &#8594; Connectors
 - Enter `http://localhost` in *'Site Address'*
@@ -326,7 +555,7 @@ OpenEMR 6.1 ships with swagger inclueded while OpenEMR 6.0 does not.
   ...
   ```
 
-#### Register an API Client
+### Register an API Client
 
 Register a client via:
 ```shell
@@ -373,7 +602,7 @@ Response should look like
 Reference: [API_README#registration](https://github.com/openemr/openemr/blob/master/API_README.md#registration)
 
 
-#### Activate API Client
+### Activate API Client
 
 - Activate API client in OpenEMR by navigating to Administration &#8594; System &#8594; API Clients
 
@@ -386,9 +615,9 @@ Reference: [API_README#registration](https://github.com/openemr/openemr/blob/mas
 API Client is now ready!
 
 
-#### Access Native & FHIR API
+### Access Native & FHIR API
 
-##### Generate Access Token
+#### Generate Access Token
 
 Newly generated access token will expire in 1 hour (3600 seconds).
 Before current access token expires, it can be refreshed. see [Refresh Access Token](#refresh-access-token) below.
@@ -424,7 +653,7 @@ Response will look like
 ACCESS_TOKEN=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJsVENsS1JoVUpJUTl0YjNUTXBzeEVIRmVkN1FCaXFkaVhrejJoUHZwVzYwIiwianRpIjoiYzZiNjhmYjVlYWVjNzNkMWMzNjM5N2MyNGYwYzIxNGRmMzIzM2QyNzM4YmJlZGMyODg1NTA3MmQzOTI0ZTNkODE5YzY3MTQwMzJmNjVjNDYiLCJpYXQiOjE2NDg2MTI3MjQsIm5iZiI6MTY0ODYxMjcyNCwiZXhwIjoxNjQ4NjE2MzI0LCJzdWIiOiI5NWYwYmU0Yi02MWQ3LTRmYTctODU5ZS03OWQ4YzA3NGEzZDEiLCJzY29wZXMiOlsib3BlbmlkIiwib2ZmbGluZV9hY2Nlc3MiLCJhcGk6b2VtciIsImFwaTpmaGlyIiwiYXBpOnBvcnQiLCJ1c2VyXC9hbGxlcmd5LnJlYWQiLCJ1c2VyXC9hbGxlcmd5LndyaXRlIiwidXNlclwvYXBwb2ludG1lbnQucmVhZCIsInVzZXJcL2FwcG9pbnRtZW50LndyaXRlIiwidXNlclwvZGVudGFsX2lzc3VlLnJlYWQiLCJ1c2VyXC9kZW50YWxfaXNzdWUud3JpdGUiLCJ1c2VyXC9kb2N1bWVudC5yZWFkIiwidXNlclwvZG9jdW1lbnQud3JpdGUiLCJ1c2VyXC9kcnVnLnJlYWQiLCJ1c2VyXC9lbmNvdW50ZXIucmVhZCIsInVzZXJcL2VuY291bnRlci53cml0ZSIsInVzZXJcL2ZhY2lsaXR5LnJlYWQiLCJ1c2VyXC9mYWNpbGl0eS53cml0ZSIsInVzZXJcL2ltbXVuaXphdGlvbi5yZWFkIiwidXNlclwvaW5zdXJhbmNlLnJlYWQiLCJ1c2VyXC9pbnN1cmFuY2Uud3JpdGUiLCJ1c2VyXC9pbnN1cmFuY2VfY29tcGFueS5yZWFkIiwidXNlclwvaW5zdXJhbmNlX2NvbXBhbnkud3JpdGUiLCJ1c2VyXC9pbnN1cmFuY2VfdHlwZS5yZWFkIiwidXNlclwvbGlzdC5yZWFkIiwidXNlclwvbWVkaWNhbF9wcm9ibGVtLnJlYWQiLCJ1c2VyXC9tZWRpY2FsX3Byb2JsZW0ud3JpdGUiLCJ1c2VyXC9tZWRpY2F0aW9uLnJlYWQiLCJ1c2VyXC9tZWRpY2F0aW9uLndyaXRlIiwidXNlclwvbWVzc2FnZS53cml0ZSIsInVzZXJcL3BhdGllbnQucmVhZCIsInVzZXJcL3BhdGllbnQud3JpdGUiLCJ1c2VyXC9wcmFjdGl0aW9uZXIucmVhZCIsInVzZXJcL3ByYWN0aXRpb25lci53cml0ZSIsInVzZXJcL3ByZXNjcmlwdGlvbi5yZWFkIiwidXNlclwvcHJvY2VkdXJlLnJlYWQiLCJ1c2VyXC9zb2FwX25vdGUucmVhZCIsInVzZXJcL3NvYXBfbm90ZS53cml0ZSIsInVzZXJcL3N1cmdlcnkucmVhZCIsInVzZXJcL3N1cmdlcnkud3JpdGUiLCJ1c2VyXC92aXRhbC5yZWFkIiwidXNlclwvdml0YWwud3JpdGUiLCJ1c2VyXC9BbGxlcmd5SW50b2xlcmFuY2UucmVhZCIsInVzZXJcL0NhcmVUZWFtLnJlYWQiLCJ1c2VyXC9Db25kaXRpb24ucmVhZCIsInVzZXJcL0VuY291bnRlci5yZWFkIiwidXNlclwvSW1tdW5pemF0aW9uLnJlYWQiLCJ1c2VyXC9Mb2NhdGlvbi5yZWFkIiwidXNlclwvTWVkaWNhdGlvbi5yZWFkIiwidXNlclwvTWVkaWNhdGlvblJlcXVlc3QucmVhZCIsInVzZXJcL09ic2VydmF0aW9uLnJlYWQiLCJ1c2VyXC9Pcmdhbml6YXRpb24ucmVhZCIsInVzZXJcL09yZ2FuaXphdGlvbi53cml0ZSIsInVzZXJcL1BhdGllbnQucmVhZCIsInVzZXJcL1BhdGllbnQud3JpdGUiLCJ1c2VyXC9QcmFjdGl0aW9uZXIucmVhZCIsInVzZXJcL1ByYWN0aXRpb25lci53cml0ZSIsInVzZXJcL1ByYWN0aXRpb25lclJvbGUucmVhZCIsInVzZXJcL1Byb2NlZHVyZS5yZWFkIiwicGF0aWVudFwvZW5jb3VudGVyLnJlYWQiLCJwYXRpZW50XC9wYXRpZW50LnJlYWQiLCJwYXRpZW50XC9FbmNvdW50ZXIucmVhZCIsInBhdGllbnRcL1BhdGllbnQucmVhZCIsInNpdGU6ZGVmYXVsdCJdfQ.WqVZjYhTQJOzVv7jLGWkDcpjErk83plx5pk-jqvKVmeTSLIJObJ6Kz9YZ7urTSI2DePqqVXmmFG3sh0qnJUPEBIiOrdLu4lbIYS4J9JqfvKU-GupcqL1MWmNjX5MVhfXmw97zUBuNA6RPUUQ_RedQTtYFhE7mIjAbDzchXJ-L4gPet9tp1RDULiHDS4iVQ1gebIKcbBFubtJE2R1MrUFODZpMhQU2ZoC9ywCR_HPKuBXgXsbJxYg_cSm5SrmaeN3tcBjnBRyhY-F9hekQEG8J26toECysp5Rx81W-lgICnlktXhQsH6Aag0A1HupPNNYMG-zH3p27TrbrG-S2jplVA
 ```
 
-##### Refresh Access Token
+#### Refresh Access Token
 
 The inital access token **must** include `offline_access` in the `scope` parameter.
 
@@ -449,7 +678,7 @@ Response will look like
 ```
 
 
-##### Access Native API (Patient)
+#### Access Native API (Patient)
 
 Get all patients
 
@@ -498,7 +727,7 @@ response should look like
 ...
 ```
 
-##### Access FHIR API (Patient)
+#### Access FHIR API (Patient)
 
 Get all patients
 
@@ -542,7 +771,7 @@ response should look like
 ...
 ```
 
-#### API Client Template Code
+### API Client Template Code
 
 |`.env` variables| notes |
 |----------------|-------|
@@ -559,11 +788,11 @@ herlps.private.js
 ```
 
 
----
 
-### Initial Setup of HLS-EHR stack
+--------------------------------------------------------------------------------
+## Initial Setup of HLS-EHR stack
 
-#### OpenEMR
+### OpenEMR
 
 After deployment of docker compose stack, cd to `assets/ehr/openemr` directory and execute the following:
 
@@ -593,18 +822,17 @@ To disable triggers, temporarily drop them and re-create them.
 openemr $ docker exec -i openemr_db mysql --user=root --password=root openemr < drop_all_triggers.sql
 ```
 
-#### OpenEMR IE (Mirth Interface Engine)
+### OpenEMR IE (Mirth Interface Engine)
 
 TODO
 
-#### Mirth
+### Mirth
 
 TODO
 
 
----
-
-### Archive
+--------------------------------------------------------------------------------
+## Archive
 
 Below are archive old documentation and therefore may not be accurate and/or complete.
 
@@ -613,7 +841,7 @@ Examine the docker dashboard and check that all 6 docker containers are running 
 ![Docker Dashboard with HLS-EHR Running](assets/images/docker-dashboard.png)
 
 
-#### Configure OpenEMR
+### Configure OpenEMR
 
 - If first-time, clone the git repo that will create a directory `hls-ehr` where you run the command below
 ```shell
@@ -686,7 +914,7 @@ open -na Google\ Chrome --args --user-data-dir=/tmp/temporary-chrome-profile-dir
 
     - click time to create appointment
 
-#### Advanced Appointment Dates by 1 Week
+### Advanced Appointment Dates by 1 Week
 
 Each time the `script_advance_appointments_one_week.sql` is run, the all appointment dates in openEMR
 will advance by 1 week.
