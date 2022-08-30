@@ -391,6 +391,11 @@ docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/Server.key openemr_app:/var/ww
 docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/Server.crt openemr_app:/var/www/localhost/htdocs/openemr/ssl/Server.crt
 docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/CertificateAuthority.key openemr_app:/var/www/localhost/htdocs/openemr/ssl/CertificateAuthority.key
 docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/CertificateAuthority.crt openemr_app:/var/www/localhost/htdocs/openemr/ssl/CertificateAuthority.crt
+docker exec openemr_app chmod 700 /var/www/localhost/htdocs/openemr/ssl/Server.key
+docker exec openemr_app chmod 700 /var/www/localhost/htdocs/openemr/ssl/Server.crt
+docker exec openemr_app chmod 700 /var/www/localhost/htdocs/openemr/ssl/CertificateAuthority.key
+docker exec openemr_app chmod 700 /var/www/localhost/htdocs/openemr/ssl/CertificateAuthority.crt
+
 ```
 
 - Replace SSL configuration on `openemr_app` docker container
@@ -398,18 +403,22 @@ docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/CertificateAuthority.crt opene
 docker exec openemr_app cp /etc/apache2/conf.d/openemr.conf /etc/apache2/conf.d/openemr-original.conf
 docker exec openemr_app cp /etc/apache2/conf.d/ssl.conf     /etc/apache2/conf.d/ssl-original.conf
 docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/openemr.conf openemr_app:/etc/apache2/conf.d/openemr.conf
-docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/ssl.conf      openemr_app:/etc/apache2/conf.d/ssl.conf
+docker cp hls-ehr/ssl-ehr.cloudcityhealthcare.com/ssl.conf     openemr_app:/etc/apache2/conf.d/ssl.conf
+
 ```
 
 - Connect to `openemr_app` docker container
-
 ```shell
 docker exec -it openemr_app /bin/sh
 ```
 
-- Copy
-
-
+- Restart Apache truncating the logs
+```shell
+truncate -s 0 /var/log/apache2/access.log
+truncate -s 0 /var/log/apache2/error.log
+truncate -s 0 /var/log/apache2/ssl_error.log
+/usr/sbin/httpd -k restart
+```
 
 - From you laptop chrome, open https://ehr.cloudcityhealthcare.com
 - The OpenEMR login page should display and you can login using `admin/pass` credentials
